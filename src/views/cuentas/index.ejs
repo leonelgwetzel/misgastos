@@ -1,0 +1,69 @@
+<h1>Cuentas</h1>
+
+<% if (success) { %>
+  <p class="success-msg" role="status">
+    <% if (success === 'creada') { %>Cuenta creada.<% } %>
+    <% if (success === 'eliminada') { %>Cuenta eliminada.<% } %>
+  </p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<section class="two-col">
+  <article class="panel">
+    <h2>Nueva cuenta</h2>
+    <form method="post" action="/cuentas">
+      <label>
+        Nombre
+        <input type="text" name="nombre" value="<%= values.nombre || '' %>" required placeholder="Galicia caja ahorro">
+        <% if (errors.nombre) { %><small class="error-msg"><%= errors.nombre %></small><% } %>
+      </label>
+      <label>
+        Tipo
+        <select name="tipo" required>
+          <option value="BANCO" <%= values.tipo === 'BANCO' ? 'selected' : '' %>>Banco</option>
+          <option value="BILLETERA" <%= values.tipo === 'BILLETERA' ? 'selected' : '' %>>Billetera virtual</option>
+          <option value="EFECTIVO" <%= values.tipo === 'EFECTIVO' ? 'selected' : '' %>>Efectivo</option>
+        </select>
+      </label>
+      <label>
+        Divisa
+        <select name="divisaId" required>
+          <% divisas.forEach(function(d) { %>
+            <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %> — <%= d.nombre %></option>
+          <% }); %>
+        </select>
+      </label>
+      <label>
+        Saldo inicial
+        <input type="number" name="saldoInicial" step="0.01" value="<%= values.saldoInicial ?? 0 %>">
+      </label>
+      <button type="submit">Agregar cuenta</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Mis cuentas</h2>
+    <% if (cuentas.length === 0) { %>
+      <p class="hint">Todavía no tenés cuentas cargadas.</p>
+    <% } else { %>
+      <ul class="card-list">
+        <% cuentas.forEach(function(c) { %>
+          <li class="card-list-item">
+            <div>
+              <a href="/cuentas/<%= c.id %>/movimientos" class="item-title"><%= c.nombre %></a>
+              <span class="hint"><%= c.tipo.toLowerCase() %> · <%= c.divisa.codigo %></span>
+              <span class="expense-amount"><%= c.divisa.simbolo %> <%= Number(c.saldoActual).toLocaleString('es-AR') %></span>
+            </div>
+            <form method="post" action="/cuentas/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar cuenta?')">
+              <button type="submit" class="secondary outline btn-sm">Eliminar</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </article>
+</section>
+
+<a href="/" class="page-back">← Inicio</a>

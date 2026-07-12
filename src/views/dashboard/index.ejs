@@ -1,0 +1,40 @@
+<header class="app-header">
+  <nav class="app-nav">
+    <a href="/" class="brand">misgastos</a>
+    <div class="nav-links">
+      <a href="/cuentas">Cuentas</a>
+      <a href="/tarjetas">Tarjetas</a>
+      <a href="/gastos">Gastos</a>
+      <a href="/gastos-fijos">Fijos</a>
+      <a href="/divisas">Divisas</a>
+    </div>
+    <div class="nav-user">
+      <span><%= user.nombre %></span>
+      <form action="/auth/logout" method="post" class="inline-form">
+        <button type="submit" class="secondary outline btn-sm">Salir</button>
+      </form>
+    </div>
+  </nav>
+</header>
+
+<section class="balance-section">
+  <h2 class="sr-only">Balance actual</h2>
+  <div class="balance-grid">
+    <% balance.divisas.forEach(function(d) { %>
+      <div class="balance-card">
+        <span class="balance-label"><%= d.codigo %></span>
+        <span class="balance-amount"><%= d.simbolo %> <%= d.saldo.toLocaleString('es-AR') %></span>
+      </div>
+    <% }); %>
+    <% if (balance.divisaPrincipal) { %>
+      <div class="balance-card balance-total">
+        <span class="balance-label">Total (<%= balance.divisaPrincipal.codigo %>)</span>
+        <span class="balance-amount">≈ <%= balance.divisaPrincipal.simbolo %> <%= balance.totalPrincipal.toLocaleString('es-AR') %></span>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<div id="month-shell" class="month-shell-wrap">
+  <%- include('../partials/month-shell') %>
+</div>

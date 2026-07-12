@@ -1,0 +1,16 @@
+# Documentación de dominio local (no versionada)
+.domain/
+
+# Dependencias y entorno
+node_modules/
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

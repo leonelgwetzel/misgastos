@@ -1,0 +1,416 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Auth y usuario ---
+
+model Usuario {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  passwordHash      String
+  nombre            String
+  divisaPrincipalId String?
+  divisaPrincipal   Divisa?  @relation("DivisaPrincipal", fields: [divisaPrincipalId], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  divisas              Divisa[]                    @relation("DivisasUsuario")
+  tarifasCambio        TarifaCambioDefault[]
+  tarjetas             Tarjeta[]
+  gastos               Gasto[]
+  categorias           Categoria[]
+  tiposGasto           TipoGasto[]
+  personasExternas     PersonaExterna[]
+  participaciones      GastoParticipante[]         @relation("ParticipanteUsuario")
+  gastosRegistrados    GastoParticipante[]         @relation("RegistradorParticipacion")
+  confirmaciones       ConfirmacionPendiente[]
+  deudasInformales     DeudaInformal[]
+  cuentas              Cuenta[]
+  movimientos          Movimiento[]
+  gastosFijos          GastoFijo[]
+}
+
+// --- Divisas ---
+
+model Divisa {
+  id        String   @id @default(cuid())
+  usuarioId String
+  usuario   Usuario  @relation("DivisasUsuario", fields: [usuarioId], references: [id], onDelete: Cascade)
+  codigo    String
+  simbolo   String
+  nombre    String
+  createdAt DateTime @default(now())
+
+  usuariosPrincipal Usuario[]               @relation("DivisaPrincipal")
+  tarifasDefault    TarifaCambioDefault[]
+  tarjetas          Tarjeta[]
+  gastos            Gasto[]
+  cuotas            Cuota[]
+  deudas            DeudaInformal[]
+  cuentas           Cuenta[]
+  movimientos       Movimiento[]
+  gastosFijos       GastoFijo[]
+  historialMontos   HistorialMonto[]
+
+  @@unique([usuarioId, codigo])
+}
+
+model TarifaCambioDefault {
+  id          String   @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  divisaId    String
+  divisa      Divisa   @relation(fields: [divisaId], references: [id], onDelete: Cascade)
+  tasa        Decimal  @db.Decimal(18, 6)
+  updatedAt   DateTime @updatedAt
+
+  @@unique([usuarioId, divisaId])
+}
+
+// --- Tarjetas y ciclos ---
+
+enum TitularidadTarjeta {
+  PROPIA
+  TERCERO
+}
+
+model Tarjeta {
+  id                    String             @id @default(cuid())
+  usuarioId             String
+  usuario               Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  alias                 String
+  banco                 String?
+  divisaId              String
+  divisa                Divisa             @relation(fields: [divisaId], references: [id])
+  titularidad           TitularidadTarjeta @default(PROPIA)
+  defaultCierreDia      Int                @default(25)
+  defaultVencimientoMes Int                @default(1)
+  activa                Boolean            @default(true)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  ciclos    CicloFacturacion[]
+  gastos    Gasto[]
+  resumenes ResumenTarjeta[]
+  gastosFijos GastoFijo[]
+}
+
+model CicloFacturacion {
+  id              String   @id @default(cuid())
+  tarjetaId       String
+  tarjeta         Tarjeta  @relation(fields: [tarjetaId], references: [id], onDelete: Cascade)
+  mesReferencia   DateTime @db.Date
+  fechaCierre     DateTime @db.Date
+  mesVencimiento  DateTime @db.Date
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([tarjetaId, mesReferencia])
+}
+
+enum EstadoResumen {
+  PENDIENTE
+  PAGADO
+}
+
+model ResumenTarjeta {
+  id            String        @id @default(cuid())
+  tarjetaId     String
+  tarjeta       Tarjeta       @relation(fields: [tarjetaId], references: [id], onDelete: Cascade)
+  mesReferencia DateTime      @db.Date
+  estado        EstadoResumen @default(PENDIENTE)
+  pagadoEn      DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([tarjetaId, mesReferencia])
+}
+
+// --- Clasificación ---
+
+model Categoria {
+  id        String   @id @default(cuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nombre    String
+  esSistema Boolean  @default(false)
+  gastos    Gasto[]
+  movimientos Movimiento[]
+
+  @@unique([usuarioId, nombre])
+}
+
+model TipoGasto {
+  id        String   @id @default(cuid())
+  usuarioId String?
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nombre    String
+  esSistema Boolean  @default(false)
+  gastos    Gasto[]
+  gastosFijos GastoFijo[]
+
+  @@unique([usuarioId, nombre])
+}
+
+enum MedioPago {
+  TARJETA
+  EFECTIVO
+  DEBITO
+}
+
+model Gasto {
+  id              String    @id @default(cuid())
+  usuarioId       String
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tarjetaId       String?
+  tarjeta         Tarjeta?  @relation(fields: [tarjetaId], references: [id], onDelete: SetNull)
+  cuentaId        String?
+  cuenta          Cuenta?   @relation(fields: [cuentaId], references: [id], onDelete: SetNull)
+  montoOriginal   Decimal   @db.Decimal(18, 2)
+  divisaId        String
+  divisa          Divisa    @relation(fields: [divisaId], references: [id])
+  tasaConversion  Decimal   @db.Decimal(18, 6) @default(1)
+  montoPrincipal  Decimal   @db.Decimal(18, 2)
+  fechaCompra     DateTime  @db.Date
+  descripcion     String
+  categoriaId     String?
+  categoria       Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  tipoGastoId     String?
+  tipoGasto       TipoGasto? @relation(fields: [tipoGastoId], references: [id], onDelete: SetNull)
+  medioPago       MedioPago
+  cantidadCuotas  Int       @default(1)
+  esCompartido    Boolean   @default(false)
+  gastoFijoId     String?
+  gastoFijo       GastoFijo? @relation(fields: [gastoFijoId], references: [id], onDelete: SetNull)
+  mesGenerado     DateTime? @db.Date
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  cuotas         Cuota[]
+  participantes  GastoParticipante[]
+  confirmaciones ConfirmacionPendiente[]
+  movimientos    Movimiento[]
+
+  @@unique([gastoFijoId, mesGenerado])
+}
+
+enum EstadoCuota {
+  PENDIENTE_FACTURAR
+  COMPROMETIDA
+  PAGADA
+}
+
+model Cuota {
+  id             String      @id @default(cuid())
+  gastoId        String
+  gasto          Gasto       @relation(fields: [gastoId], references: [id], onDelete: Cascade)
+  numero         Int
+  montoOriginal  Decimal     @db.Decimal(18, 2)
+  divisaId       String
+  divisa         Divisa      @relation(fields: [divisaId], references: [id])
+  tasaConversion Decimal     @db.Decimal(18, 6) @default(1)
+  montoPrincipal Decimal     @db.Decimal(18, 2)
+  mesImpacto     DateTime    @db.Date
+  estado         EstadoCuota @default(COMPROMETIDA)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([gastoId, numero])
+}
+
+// --- Compartidos y deudas ---
+
+model PersonaExterna {
+  id        String   @id @default(cuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nombre    String
+  createdAt DateTime @default(now())
+
+  participaciones GastoParticipante[]
+  deudas          DeudaInformal[]
+
+  @@unique([usuarioId, nombre])
+}
+
+enum ModoSplit {
+  EQUITATIVO
+  PORCENTAJE
+  MONTO_FIJO
+}
+
+enum EstadoParticipacion {
+  PENDIENTE
+  CONFIRMADO
+  RECHAZADO
+}
+
+model GastoParticipante {
+  id                String              @id @default(cuid())
+  gastoId           String
+  gasto             Gasto               @relation(fields: [gastoId], references: [id], onDelete: Cascade)
+  usuarioId         String?
+  usuario           Usuario?            @relation("ParticipanteUsuario", fields: [usuarioId], references: [id], onDelete: SetNull)
+  personaExternaId  String?
+  personaExterna    PersonaExterna?     @relation(fields: [personaExternaId], references: [id], onDelete: SetNull)
+  montoPorcion      Decimal             @db.Decimal(18, 2)
+  porcentaje        Decimal?            @db.Decimal(5, 2)
+  modoSplit         ModoSplit
+  estado            EstadoParticipacion @default(PENDIENTE)
+  registradorId     String
+  registrador       Usuario             @relation("RegistradorParticipacion", fields: [registradorId], references: [id])
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+}
+
+enum EstadoConfirmacion {
+  PENDIENTE
+  CONFIRMADO
+  RECHAZADO
+}
+
+model ConfirmacionPendiente {
+  id           String             @id @default(cuid())
+  gastoId      String
+  gasto        Gasto              @relation(fields: [gastoId], references: [id], onDelete: Cascade)
+  usuarioId    String
+  usuario      Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  estado       EstadoConfirmacion @default(PENDIENTE)
+  createdAt    DateTime           @default(now())
+  respondidoEn DateTime?
+
+  @@unique([gastoId, usuarioId])
+}
+
+enum TipoDeuda {
+  ME_DEBEN
+  DEBO
+}
+
+model DeudaInformal {
+  id             String          @id @default(cuid())
+  usuarioId      String
+  usuario        Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  personaId      String
+  persona        PersonaExterna  @relation(fields: [personaId], references: [id], onDelete: Cascade)
+  montoOriginal  Decimal         @db.Decimal(18, 2)
+  divisaId       String
+  divisa         Divisa          @relation(fields: [divisaId], references: [id])
+  tasaConversion Decimal         @db.Decimal(18, 6) @default(1)
+  montoPrincipal Decimal         @db.Decimal(18, 2)
+  tipo           TipoDeuda
+  descripcion    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+// --- Cuentas y movimientos ---
+
+enum TipoCuenta {
+  BANCO
+  BILLETERA
+  EFECTIVO
+}
+
+enum TipoMovimiento {
+  INGRESO
+  EGRESO
+  AJUSTE
+}
+
+model Cuenta {
+  id           String     @id @default(cuid())
+  usuarioId    String
+  usuario      Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nombre       String
+  tipo         TipoCuenta
+  divisaId     String
+  divisa       Divisa     @relation(fields: [divisaId], references: [id])
+  saldoInicial Decimal    @db.Decimal(18, 2) @default(0)
+  saldoActual  Decimal    @db.Decimal(18, 2) @default(0)
+  activa       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  movimientos Movimiento[]
+  gastos      Gasto[]
+  gastosFijos GastoFijo[]
+}
+
+model Movimiento {
+  id             String         @id @default(cuid())
+  usuarioId      String
+  usuario        Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  cuentaId       String
+  cuenta         Cuenta         @relation(fields: [cuentaId], references: [id], onDelete: Cascade)
+  tipo           TipoMovimiento
+  monto          Decimal        @db.Decimal(18, 2)
+  divisaId       String
+  divisa         Divisa         @relation(fields: [divisaId], references: [id])
+  tasaConversion Decimal        @db.Decimal(18, 6) @default(1)
+  montoPrincipal Decimal        @db.Decimal(18, 2)
+  fecha          DateTime       @db.Date
+  descripcion    String?
+  categoriaId    String?
+  categoria      Categoria?     @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  gastoId        String?
+  gasto          Gasto?         @relation(fields: [gastoId], references: [id], onDelete: SetNull)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+// --- Gastos fijos ---
+
+model GastoFijo {
+  id          String    @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  descripcion String
+  tipoGastoId String?
+  tipoGasto   TipoGasto? @relation(fields: [tipoGastoId], references: [id], onDelete: SetNull)
+  divisaId    String
+  divisa      Divisa    @relation(fields: [divisaId], references: [id])
+  medioPago   MedioPago
+  tarjetaId   String?
+  tarjeta     Tarjeta?  @relation(fields: [tarjetaId], references: [id], onDelete: SetNull)
+  cuentaId    String?
+  cuenta      Cuenta?   @relation(fields: [cuentaId], references: [id], onDelete: SetNull)
+  diaDelMes   Int       @default(1)
+  activo      Boolean   @default(true)
+  vigenteDesde DateTime @db.Date
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  historial   HistorialMonto[]
+  overrides   GastoFijoMes[]
+  gastos      Gasto[]
+}
+
+model HistorialMonto {
+  id           String    @id @default(cuid())
+  gastoFijoId  String
+  gastoFijo    GastoFijo @relation(fields: [gastoFijoId], references: [id], onDelete: Cascade)
+  monto        Decimal   @db.Decimal(18, 2)
+  divisaId     String
+  divisa       Divisa    @relation(fields: [divisaId], references: [id])
+  vigenteDesde DateTime  @db.Date
+  createdAt    DateTime  @default(now())
+}
+
+model GastoFijoMes {
+  id             String    @id @default(cuid())
+  gastoFijoId    String
+  gastoFijo      GastoFijo @relation(fields: [gastoFijoId], references: [id], onDelete: Cascade)
+  mesReferencia  DateTime  @db.Date
+  omitido        Boolean   @default(false)
+  montoOverride  Decimal?  @db.Decimal(18, 2)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([gastoFijoId, mesReferencia])
+}

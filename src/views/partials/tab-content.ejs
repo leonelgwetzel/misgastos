@@ -1,0 +1,148 @@
+<% if (tab === 'plata') { %>
+  <section class="tab-panel" role="tabpanel">
+    <% if (vistaPlata && vistaPlata.mensaje) { %>
+      <p class="info-msg"><%= vistaPlata.mensaje %> <a href="/cuentas">Crear cuenta</a></p>
+    <% } %>
+    <div class="summary-cards">
+      <article>
+        <header>Ingresos</header>
+        <p class="amount positive"><%= vistaPlata.totalIngresosFormateado %></p>
+      </article>
+      <article>
+        <header>Egresos</header>
+        <p class="amount negative"><%= vistaPlata.totalEgresosFormateado %></p>
+      </article>
+      <article>
+        <header>Resultado</header>
+        <p class="amount"><%= vistaPlata.resultadoFormateado %></p>
+      </article>
+    </div>
+
+    <% if (vistaPlata.ingresos.length > 0) { %>
+      <h4>Ingresos</h4>
+      <ul class="expense-list">
+        <% vistaPlata.ingresos.forEach(function(i) { %>
+          <li>
+            <span class="expense-meta">
+              <span class="expense-name"><%= i.descripcion %></span>
+              <span class="expense-tag"><%= i.cuenta %> · <%= new Date(i.fecha).toLocaleDateString('es-AR') %></span>
+            </span>
+            <span class="expense-amount amount positive">+<%= i.simbolo %> <%= i.monto.toLocaleString('es-AR') %></span>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+
+    <% if (vistaPlata.egresos.length > 0) { %>
+      <h4>Egresos</h4>
+      <ul class="expense-list">
+        <% vistaPlata.egresos.forEach(function(e) { %>
+          <li>
+            <span class="expense-meta">
+              <span class="expense-name"><%= e.descripcion %></span>
+              <span class="expense-tag"><%= e.cuenta %><% if (e.esFijo) { %> · fijo<% } %> · <%= new Date(e.fecha).toLocaleDateString('es-AR') %></span>
+            </span>
+            <span class="expense-amount amount negative">−<%= e.simbolo %> <%= e.monto.toLocaleString('es-AR') %></span>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+
+    <% if (!vistaPlata.mensaje && vistaPlata.ingresos.length === 0 && vistaPlata.egresos.length === 0) { %>
+      <div class="empty-state">
+        <p>Sin movimientos este mes</p>
+        <p><a href="/cuentas">Registrar ingreso o egreso</a></p>
+      </div>
+    <% } %>
+
+    <p class="total-line">
+      <strong>Saldo cuentas al cierre</strong>
+      <span><%= vistaPlata.saldoCuentasFormateado %></span>
+    </p>
+  </section>
+<% } else { %>
+  <section class="tab-panel" role="tabpanel">
+    <%- include('chart-tarjetas-12m') %>
+
+    <% if (vistaCompromisos && vistaCompromisos.mensaje) { %>
+      <p class="info-msg"><%= vistaCompromisos.mensaje %></p>
+    <% } %>
+
+    <% if (vistaCompromisos && vistaCompromisos.tarjetas.length > 0) { %>
+      <details class="ciclos-details">
+        <summary>Ajustar ciclos de tarjeta</summary>
+        <div class="ciclos-body">
+          <% vistaCompromisos.tarjetas.forEach(function(t) { %>
+            <form class="ciclo-form"
+                  method="post"
+                  action="/ciclos"
+                  hx-post="/ciclos"
+                  hx-target="#tab-content"
+                  hx-swap="innerHTML">
+              <input type="hidden" name="tarjetaId" value="<%= t.id %>">
+              <input type="hidden" name="monthKey" value="<%= month.key %>">
+              <fieldset>
+                <legend><%= t.alias %> · <%= t.divisa %></legend>
+                <div class="grid-2">
+                  <label>
+                    Fecha cierre
+                    <input type="date" name="fechaCierre" value="<%= t.cicloForm.fechaCierre %>" required>
+                  </label>
+                  <label>
+                    Mes vencimiento
+                    <input type="month" name="mesVencimiento" value="<%= t.cicloForm.mesVencimiento %>" required>
+                  </label>
+                </div>
+                <button type="submit" class="secondary outline btn-sm">Guardar</button>
+              </fieldset>
+            </form>
+          <% }); %>
+        </div>
+      </details>
+    <% } %>
+
+    <% if (vistaCompromisos && vistaCompromisos.cuotaCero.length > 0) { %>
+      <h4>Pendiente de facturar</h4>
+      <ul class="expense-list">
+        <% vistaCompromisos.cuotaCero.forEach(function(c) { %>
+          <li>
+            <span class="expense-meta">
+              <span class="expense-name"><%= c.descripcion %></span>
+              <span class="expense-tag"><%= c.etiqueta %></span>
+            </span>
+            <span class="expense-amount"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR') %></span>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+
+    <% if (vistaCompromisos && vistaCompromisos.cuotas.length > 0) { %>
+      <h4>Cuotas del mes</h4>
+      <ul class="expense-list">
+        <% vistaCompromisos.cuotas.forEach(function(c) { %>
+          <li>
+            <span class="expense-meta">
+              <span class="expense-name"><%= c.descripcion %></span>
+              <span class="expense-tag"><%= c.tarjeta %> · <%= c.etiqueta %></span>
+            </span>
+            <span class="expense-amount"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR') %></span>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+
+    <% if (vistaCompromisos && vistaCompromisos.cuotaCero.length === 0 && vistaCompromisos.cuotas.length === 0 && !vistaCompromisos.mensaje) { %>
+      <div class="empty-state">
+        <p>Sin compromisos este mes</p>
+        <p><a href="/gastos">Registrar un gasto</a></p>
+      </div>
+    <% } %>
+
+    <% if (vistaCompromisos && (vistaCompromisos.cuotaCero.length > 0 || vistaCompromisos.cuotas.length > 0)) { %>
+      <p class="total-line">
+        <strong>Total comprometido</strong>
+        <span><%= vistaCompromisos.totalFormateado %></span>
+      </p>
+    <% } %>
+  </section>
+<% } %>

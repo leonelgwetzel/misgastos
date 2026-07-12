@@ -1,0 +1,36 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>Crear cuenta</h1>
+    <p class="auth-subtitle">Empezá a ordenar tus finanzas</p>
+
+    <% if (errors.general) { %>
+      <p class="error-msg" role="alert"><%= errors.general %></p>
+    <% } %>
+
+    <form method="post" action="/auth/register">
+      <label>
+        Nombre
+        <input type="text" name="nombre" value="<%= values.nombre %>" required autocomplete="name">
+        <% if (errors.nombre) { %><small class="error-msg"><%= errors.nombre %></small><% } %>
+      </label>
+      <label>
+        Email
+        <input type="email" name="email" value="<%= values.email %>" required autocomplete="email">
+        <% if (errors.email) { %><small class="error-msg"><%= errors.email %></small><% } %>
+      </label>
+      <label>
+        Contraseña
+        <input type="password" name="password" required autocomplete="new-password" minlength="8">
+        <% if (errors.password) { %><small class="error-msg"><%= errors.password %></small><% } %>
+      </label>
+      <label>
+        Confirmar contraseña
+        <input type="password" name="passwordConfirm" required autocomplete="new-password">
+        <% if (errors.passwordConfirm) { %><small class="error-msg"><%= errors.passwordConfirm %></small><% } %>
+      </label>
+      <button type="submit">Registrarme</button>
+    </form>
+
+    <p class="auth-footer">¿Ya tenés cuenta? <a href="/auth/login">Iniciá sesión</a></p>
+  </div>
+</div>

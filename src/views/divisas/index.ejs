@@ -1,0 +1,65 @@
+<h1>Divisas</h1>
+
+<% if (success) { %>
+  <p class="success-msg" role="status">
+    <% if (success === 'creada') { %>Divisa agregada.<% } %>
+    <% if (success === 'tarifa') { %>Tarifa actualizada.<% } %>
+  </p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<% if (divisaPrincipal) { %>
+  <p class="hint">Divisa principal: <strong><%= divisaPrincipal.codigo %></strong> (no editable en MVP)</p>
+<% } %>
+
+<section class="two-col">
+  <article class="panel">
+    <h2>Agregar divisa</h2>
+    <form method="post" action="/divisas">
+      <label>
+        Código
+        <input type="text" name="codigo" value="<%= values.codigo || '' %>" required placeholder="EUR" maxlength="6">
+        <% if (errors.codigo) { %><small class="error-msg"><%= errors.codigo %></small><% } %>
+      </label>
+      <label>
+        Símbolo
+        <input type="text" name="simbolo" value="<%= values.simbolo || '' %>" required placeholder="€">
+      </label>
+      <label>
+        Nombre
+        <input type="text" name="nombre" value="<%= values.nombre || '' %>" required placeholder="Euro">
+      </label>
+      <button type="submit">Agregar</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Mis divisas</h2>
+    <ul class="card-list">
+      <% divisas.forEach(function(d) { %>
+        <li>
+          <span class="item-title"><%= d.codigo %> — <%= d.nombre %></span>
+          <span class="hint"><%= d.simbolo %></span>
+          <% if (divisaPrincipal && d.id !== divisaPrincipal.id) { %>
+            <form method="post" action="/divisas/tarifas" style="margin-top: 0.75rem;">
+              <input type="hidden" name="divisaId" value="<%= d.id %>">
+              <label>
+                Tasa → <%= divisaPrincipal.codigo %>
+                <input type="number" name="tasa" step="0.000001" min="0.000001"
+                  value="<%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa) : '' %>"
+                  placeholder="Ej. 1200" required>
+              </label>
+              <button type="submit" class="secondary outline btn-sm">Guardar tarifa</button>
+            </form>
+          <% } else if (divisaPrincipal && d.id === divisaPrincipal.id) { %>
+            <span class="hint">Principal</span>
+          <% } %>
+        </li>
+      <% }); %>
+    </ul>
+  </article>
+</section>
+
+<a href="/" class="page-back">← Inicio</a>

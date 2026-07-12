@@ -1,0 +1,38 @@
+<div class="month-shell">
+  <nav class="month-nav" aria-label="Navegación mensual">
+    <a href="<%= nav.prev %>&partial=month"
+       hx-get="<%= nav.prev %>&partial=month"
+       hx-target="#month-shell"
+       hx-push-url="true"
+       class="month-nav-btn"
+       aria-label="Mes anterior">‹</a>
+    <h2 class="month-label"><%= month.label %></h2>
+    <a href="<%= nav.next %>&partial=month"
+       hx-get="<%= nav.next %>&partial=month"
+       hx-target="#month-shell"
+       hx-push-url="true"
+       class="month-nav-btn"
+       aria-label="Mes siguiente">›</a>
+  </nav>
+
+  <div class="tabs" role="tablist">
+    <a href="/?year=<%= month.year %>&month=<%= month.month %>&tab=compromisos"
+       hx-get="/?year=<%= month.year %>&month=<%= month.month %>&tab=compromisos"
+       hx-target="#tab-content"
+       hx-push-url="true"
+       class="tab <%= tab === 'compromisos' ? 'tab-active' : '' %>"
+       role="tab"
+       aria-selected="<%= tab === 'compromisos' %>">Compromisos</a>
+    <a href="/?year=<%= month.year %>&month=<%= month.month %>&tab=plata"
+       hx-get="/?year=<%= month.year %>&month=<%= month.month %>&tab=plata"
+       hx-target="#tab-content"
+       hx-push-url="true"
+       class="tab <%= tab === 'plata' ? 'tab-active' : '' %>"
+       role="tab"
+       aria-selected="<%= tab === 'plata' %>">Mi plata</a>
+  </div>
+
+  <div id="tab-content">
+    <%- include('tab-content') %>
+  </div>
+</div>

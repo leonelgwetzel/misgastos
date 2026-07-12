@@ -1,0 +1,74 @@
+<h1>Tarjetas</h1>
+
+<% if (success) { %>
+  <p class="success-msg" role="status">Tarjeta <%= success %> correctamente.</p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<section class="two-col">
+  <article class="panel">
+    <h2>Nueva tarjeta</h2>
+    <form method="post" action="/tarjetas">
+      <label>
+        Alias
+        <input type="text" name="alias" value="<%= values.alias || '' %>" required placeholder="Visa Galicia">
+        <% if (errors.alias) { %><small class="error-msg"><%= errors.alias %></small><% } %>
+      </label>
+      <label>
+        Banco
+        <input type="text" name="banco" value="<%= values.banco || '' %>" placeholder="Opcional">
+      </label>
+      <label>
+        Divisa
+        <select name="divisaId" required>
+          <% divisas.forEach(function(d) { %>
+            <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %> — <%= d.nombre %></option>
+          <% }); %>
+        </select>
+      </label>
+      <label>
+        Titularidad
+        <select name="titularidad">
+          <option value="PROPIA" <%= values.titularidad === 'PROPIA' ? 'selected' : '' %>>Propia</option>
+          <option value="TERCERO" <%= values.titularidad === 'TERCERO' ? 'selected' : '' %>>De tercero</option>
+        </select>
+      </label>
+      <div class="grid-2">
+        <label>
+          Día cierre
+          <input type="number" name="defaultCierreDia" min="1" max="28" value="<%= values.defaultCierreDia || 25 %>" required>
+        </label>
+        <label>
+          Vence mes +N
+          <input type="number" name="defaultVencimientoMes" min="0" max="3" value="<%= values.defaultVencimientoMes ?? 1 %>" required>
+        </label>
+      </div>
+      <button type="submit">Agregar tarjeta</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Mis tarjetas</h2>
+    <% if (tarjetas.length === 0) { %>
+      <p class="hint">Todavía no tenés tarjetas cargadas.</p>
+    <% } else { %>
+      <ul class="card-list">
+        <% tarjetas.forEach(function(t) { %>
+          <li class="card-list-item">
+            <div>
+              <span class="item-title"><%= t.alias %></span>
+              <span class="hint"><%= t.divisa.codigo %><% if (t.banco) { %> · <%= t.banco %><% } %></span>
+            </div>
+            <form method="post" action="/tarjetas/<%= t.id %>/eliminar" onsubmit="return confirm('¿Eliminar tarjeta?')">
+              <button type="submit" class="secondary outline btn-sm">Eliminar</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </article>
+</section>
+
+<a href="/" class="page-back">← Inicio</a>

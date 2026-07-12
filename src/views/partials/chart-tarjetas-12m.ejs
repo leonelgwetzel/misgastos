@@ -1,0 +1,30 @@
+<% if (proyeccionTarjetas && proyeccionTarjetas.bars.length > 0) { %>
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Proyección tarjetas</h3>
+      <p class="chart-hint">12 meses desde <%= month.label %> · en divisa principal</p>
+    </div>
+    <div
+      class="bar-chart"
+      role="img"
+      aria-label="Proyección de compromisos en tarjeta a 12 meses desde <%= month.label %>">
+      <% proyeccionTarjetas.bars.forEach(function(bar) { %>
+        <div class="bar-col<%= bar.esActual ? ' bar-col-current' : '' %>">
+          <div class="bar-value" title="<%= bar.totalFormateado %>">
+            <% if (bar.esActual && bar.total > 0) { %>
+              <%= bar.totalFormateado %>
+            <% } else if (bar.total > 0) { %>
+              <span class="sr-only"><%= bar.totalFormateado %></span>
+            <% } %>
+          </div>
+          <div class="bar-track" title="<%= bar.totalFormateado %>">
+            <div
+              class="bar-fill"
+              style="height: <%= bar.total > 0 ? Math.max(bar.alturaPct, 6) : 0 %>%"></div>
+          </div>
+          <div class="bar-label"><%= bar.shortLabel %></div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+<% } %>

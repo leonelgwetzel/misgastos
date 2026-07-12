@@ -1,0 +1,130 @@
+<h1>Gastos</h1>
+
+<% if (success) { %>
+  <p class="success-msg" role="status">Gasto registrado.</p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<section class="two-col">
+  <article class="panel">
+    <h2>Nuevo gasto</h2>
+    <form method="post" action="/gastos" id="gasto-form">
+      <label>
+        Medio de pago
+        <select name="medioPago" id="medioPago" required>
+          <option value="TARJETA" <%= values.medioPago === 'TARJETA' ? 'selected' : '' %>>Tarjeta</option>
+          <option value="EFECTIVO" <%= values.medioPago === 'EFECTIVO' ? 'selected' : '' %>>Efectivo</option>
+          <option value="DEBITO" <%= values.medioPago === 'DEBITO' ? 'selected' : '' %>>Débito</option>
+        </select>
+      </label>
+
+      <div id="campos-tarjeta">
+        <% if (tarjetas.length === 0) { %>
+          <p class="hint"><a href="/tarjetas">Agregá una tarjeta</a> para gastos con tarjeta.</p>
+        <% } else { %>
+          <label>
+            Tarjeta
+            <select name="tarjetaId">
+              <% tarjetas.filter(t => t.titularidad === 'PROPIA').forEach(function(t) { %>
+                <option value="<%= t.id %>" <%= values.tarjetaId === t.id ? 'selected' : '' %>><%= t.alias %> (<%= t.divisa.codigo %>)</option>
+              <% }); %>
+            </select>
+          </label>
+          <label>
+            Cuotas
+            <input type="number" name="cantidadCuotas" min="1" max="48" value="<%= values.cantidadCuotas || 1 %>">
+          </label>
+        <% } %>
+      </div>
+
+      <div id="campos-efectivo" hidden>
+        <label>
+          Divisa
+          <select name="divisaId">
+            <% divisas.forEach(function(d) { %>
+              <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %></option>
+            <% }); %>
+          </select>
+        </label>
+        <label>
+          Cuenta (opcional)
+          <select name="cuentaId">
+            <option value="">Sin cuenta</option>
+            <% cuentas.forEach(function(c) { %>
+              <option value="<%= c.id %>" <%= values.cuentaId === c.id ? 'selected' : '' %>><%= c.nombre %> (<%= c.divisa.codigo %>)</option>
+            <% }); %>
+          </select>
+        </label>
+      </div>
+
+      <label>
+        Descripción
+        <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required placeholder="Ej. Supermercado">
+        <% if (errors.descripcion) { %><small class="error-msg"><%= errors.descripcion %></small><% } %>
+      </label>
+      <label>
+        Monto
+        <input type="number" name="montoOriginal" step="0.01" min="0.01" value="<%= values.montoOriginal || '' %>" required>
+        <% if (errors.montoOriginal) { %><small class="error-msg"><%= errors.montoOriginal %></small><% } %>
+      </label>
+      <label>
+        Fecha de compra
+        <input type="date" name="fechaCompra" value="<%= values.fechaCompra || '' %>" required>
+      </label>
+      <label>
+        Categoría
+        <select name="categoriaId">
+          <option value="">Sin categoría</option>
+          <% categorias.forEach(function(c) { %>
+            <option value="<%= c.id %>" <%= values.categoriaId === c.id ? 'selected' : '' %>><%= c.nombre %></option>
+          <% }); %>
+        </select>
+      </label>
+      <button type="submit">Registrar gasto</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Últimos gastos</h2>
+    <% if (gastos.length === 0) { %>
+      <p class="hint">Sin gastos registrados.</p>
+    <% } else { %>
+      <ul class="card-list">
+        <% gastos.forEach(function(g) { %>
+          <li>
+            <div class="item-row">
+              <span class="item-title"><%= g.descripcion %></span>
+              <span class="expense-amount"><%= g.divisa.simbolo %> <%= Number(g.montoOriginal).toLocaleString('es-AR') %></span>
+            </div>
+            <span class="hint">
+              <%= new Date(g.fechaCompra).toLocaleDateString('es-AR') %>
+              · <%= g.medioPago.toLowerCase() %>
+              <% if (g.tarjeta) { %> · <%= g.tarjeta.alias %><% } %>
+              <% if (g.cuenta) { %> · <%= g.cuenta.nombre %><% } %>
+              <% if (g.cantidadCuotas > 1) { %> · <%= g.cantidadCuotas %> cuotas<% } %>
+            </span>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </article>
+</section>
+
+<script>
+  (function () {
+    const medio = document.getElementById('medioPago');
+    const tarjeta = document.getElementById('campos-tarjeta');
+    const efectivo = document.getElementById('campos-efectivo');
+    function toggle() {
+      const esTarjeta = medio.value === 'TARJETA';
+      tarjeta.hidden = !esTarjeta;
+      efectivo.hidden = esTarjeta;
+    }
+    medio.addEventListener('change', toggle);
+    toggle();
+  })();
+</script>
+
+<a href="/" class="page-back">← Inicio</a>

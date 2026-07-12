@@ -1,0 +1,127 @@
+<h1>Gastos fijos</h1>
+
+<% if (success) { %>
+  <p class="success-msg" role="status">
+    <% if (success === 'creado') { %>Gasto fijo creado.<% } %>
+    <% if (success === 'historial') { %>Nuevo monto registrado.<% } %>
+    <% if (success === 'override') { %>Mes actualizado.<% } %>
+    <% if (success === 'desactivado') { %>Gasto fijo desactivado.<% } %>
+  </p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<section class="two-col">
+  <article class="panel">
+    <h2>Nuevo gasto fijo</h2>
+    <form method="post" action="/gastos-fijos">
+      <label>
+        Descripción
+        <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required placeholder="Ej. Alquiler">
+      </label>
+      <label>
+        Monto mensual
+        <input type="number" name="monto" step="0.01" min="0.01" value="<%= values.monto || '' %>" required>
+      </label>
+      <label>
+        Divisa
+        <select name="divisaId" required>
+          <% divisas.forEach(function(d) { %>
+            <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %></option>
+          <% }); %>
+        </select>
+      </label>
+      <label>
+        Medio de pago
+        <select name="medioPago" id="fijo-medio" required>
+          <option value="TARJETA">Tarjeta</option>
+          <option value="EFECTIVO">Efectivo</option>
+          <option value="DEBITO">Débito</option>
+        </select>
+      </label>
+      <label id="fijo-tarjeta-label">
+        Tarjeta
+        <select name="tarjetaId">
+          <option value="">—</option>
+          <% tarjetas.forEach(function(t) { %>
+            <option value="<%= t.id %>"><%= t.alias %></option>
+          <% }); %>
+        </select>
+      </label>
+      <label id="fijo-cuenta-label" hidden>
+        Cuenta
+        <select name="cuentaId">
+          <option value="">—</option>
+          <% cuentas.forEach(function(c) { %>
+            <option value="<%= c.id %>"><%= c.nombre %></option>
+          <% }); %>
+        </select>
+      </label>
+      <div class="grid-2">
+        <label>
+          Día del mes
+          <input type="number" name="diaDelMes" min="1" max="28" value="<%= values.diaDelMes || 1 %>">
+        </label>
+        <label>
+          Vigente desde
+          <input type="date" name="vigenteDesde" value="<%= values.vigenteDesde || '' %>" required>
+        </label>
+      </div>
+      <button type="submit">Crear gasto fijo</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Plantillas activas</h2>
+    <% if (gastosFijos.length === 0) { %>
+      <p class="hint">Sin gastos fijos. Ej: alquiler, gym, streaming.</p>
+    <% } else { %>
+      <ul class="card-list">
+        <% gastosFijos.filter(f => f.activo).forEach(function(f) { %>
+          <li>
+            <span class="item-title"><%= f.descripcion %></span>
+            <span class="hint">
+              <%= f.divisa.simbolo %> <%= f.historial[0] ? Number(f.historial[0].monto).toLocaleString('es-AR') : '—' %>
+              · <%= f.medioPago.toLowerCase() %>
+              · día <%= f.diaDelMes %>
+            </span>
+            <form method="post" action="/gastos-fijos/<%= f.id %>/historial" style="margin-top: 0.75rem;">
+              <div class="grid-2">
+                <label>
+                  Nuevo monto desde
+                  <input type="date" name="vigenteDesde" required>
+                </label>
+                <label>
+                  Monto
+                  <input type="number" name="monto" step="0.01" min="0.01" required>
+                </label>
+              </div>
+              <button type="submit" class="secondary outline btn-sm">Actualizar monto</button>
+            </form>
+            <form method="post" action="/gastos-fijos/<%= f.id %>/eliminar" style="margin-top: 0.5rem;" onsubmit="return confirm('¿Desactivar?')">
+              <button type="submit" class="secondary outline btn-sm">Desactivar</button>
+            </form>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </article>
+</section>
+
+<script>
+  (function () {
+    const medio = document.getElementById('fijo-medio');
+    const tarjeta = document.getElementById('fijo-tarjeta-label');
+    const cuenta = document.getElementById('fijo-cuenta-label');
+    function toggle() {
+      const esTarjeta = medio.value === 'TARJETA';
+      tarjeta.hidden = !esTarjeta;
+      cuenta.hidden = esTarjeta;
+    }
+    medio.addEventListener('change', toggle);
+    toggle();
+  })();
+</script>
+
+<a href="/" class="page-back">← Inicio</a>
