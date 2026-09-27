@@ -1,0 +1,9 @@
+---
+description: Closed misgastos frontend decisions — do not regress UI
+globs: **/*.{ejs,css}
+alwaysApply: false
+---
+
+Before changing views or CSS, follow `.cursor/skills/misgastos-front/SKILL.md`.
+
+Hard rule: no native OS `<select>` dropdown. Use `src/views/partials/_app-select.ejs` (closed = normal field, open = `.reg-menu` like Nuevo). When the user closes a new visual decision, append it to that skill.
