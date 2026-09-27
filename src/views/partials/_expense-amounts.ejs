@@ -1,0 +1,11 @@
+<span class="expense-amounts">
+  <span class="expense-amount expense-amount-original">
+    <%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+  </span>
+  <% if (!c.esDivisaPrincipal) { %>
+    <span class="expense-amount-converted">
+      <span class="expense-amount-label">en <%= c.codigoPrincipal %>:</span>
+      <%= c.simboloPrincipal %> <%= c.montoPrincipal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+    </span>
+  <% } %>
+</span>

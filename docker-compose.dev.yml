@@ -31,6 +31,24 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-dev-secret-change-in-production}
       NODE_ENV: development
       PORT: 3000
+      TZ: America/Argentina/Buenos_Aires
+    depends_on:
+      db:
+        condition: service_healthy
+
+  bot:
+    build:
+      context: .
+      target: build
+    command: npm run bot:dev
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    environment:
+      DATABASE_URL: postgresql://misgastos:misgastos@db:5432/misgastos
+      NODE_ENV: development
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TZ: America/Argentina/Buenos_Aires
     depends_on:
       db:
         condition: service_healthy

@@ -1,0 +1,42 @@
+<%
+  var groups = typeof logGroups !== 'undefined' ? logGroups : [];
+%>
+<dialog class="capture-sheet" id="<%= dialogId %>">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2><%= title %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <% if (groups.every(function(g) { return !g.rows || g.rows.length === 0; })) { %>
+      <p class="hint">Todavía no hay cambios registrados.</p>
+    <% } else { %>
+      <% groups.forEach(function(g) { %>
+        <% if (g.rows && g.rows.length) { %>
+          <section class="cfg-log-group">
+            <% if (g.heading) { %><h3><%= g.heading %></h3><% } %>
+            <div class="table-wrap dt-wrap">
+              <table class="dt">
+                <thead>
+                  <tr>
+                    <% g.columns.forEach(function(col) { %>
+                      <th><%= col %></th>
+                    <% }); %>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% g.rows.forEach(function(row) { %>
+                    <tr>
+                      <% row.forEach(function(cell) { %>
+                        <td><%= cell %></td>
+                      <% }); %>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        <% } %>
+      <% }); %>
+    <% } %>
+  </div>
+</dialog>

@@ -1,0 +1,14 @@
+<%
+  var path = typeof currentPath !== 'undefined' ? currentPath : '/';
+  var isDash = path.startsWith('/dashboard');
+  var isInicio = path === '/';
+  var isMov = path.startsWith('/movimientos') || (path.startsWith('/ingresos') && !path.startsWith('/ingresos-fijos')) || (path.startsWith('/gastos') && !path.startsWith('/gastos-fijos'));
+  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/gastos-fijos') || path.startsWith('/ingresos-fijos') || path.startsWith('/categorias') || path.startsWith('/usuarios');
+%>
+<nav class="mobile-dock" aria-label="Navegación móvil">
+  <a href="/dashboard" class="<%= isDash ? 'is-active' : '' %>"><span><i class="fa-solid fa-chart-pie" aria-hidden="true"></i></span>Dash</a>
+  <a href="/" class="<%= isInicio ? 'is-active' : '' %>"><span><i class="fa-solid fa-calendar-days" aria-hidden="true"></i></span>Mes</a>
+  <a href="/movimientos" class="<%= isMov ? 'is-active' : '' %>"><span><i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i></span>Mov.</a>
+  <a href="/gastos#nuevo" class="dock-new"><span><i class="fa-solid fa-plus" aria-hidden="true"></i></span>Nuevo</a>
+  <a href="/configuracion" class="<%= isConfig ? 'is-active' : '' %>"><span><i class="fa-solid fa-gear" aria-hidden="true"></i></span>Config</a>
+</nav>

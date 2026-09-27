@@ -1,0 +1,13 @@
+<%
+  const field = model;
+  const choices = (options || []).map(function(opt) {
+    if (typeof opt === 'string') return { value: opt, label: opt };
+    return { value: opt.value, label: opt.label, icono: opt.icono || '' };
+  });
+%>
+<%- include('_app-select', {
+  model: field,
+  compact: true,
+  ariaLabel: ariaLabel,
+  options: choices
+}) %>

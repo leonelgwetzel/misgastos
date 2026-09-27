@@ -1,0 +1,6 @@
+{
+  "watch": ["src/bot", "src/services", "src/lib"],
+  "ext": "js,json",
+  "ignore": ["node_modules", "public"],
+  "exec": "node src/bot/index.js"
+}

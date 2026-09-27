@@ -1,36 +1,46 @@
 <div class="auth-page">
+  <%- include('../partials/_auth-fondo') %>
   <div class="auth-card">
-    <h1>Crear cuenta</h1>
-    <p class="auth-subtitle">Empezá a ordenar tus finanzas</p>
+    <a class="auth-brand" href="/auth/login">
+      <img src="/img/logo-mark.png" width="36" height="36" alt="misgastos">
+    </a>
 
-    <% if (errors.general) { %>
-      <p class="error-msg" role="alert"><%= errors.general %></p>
+    <% if (requested) { %>
+      <p class="success-msg" role="status">Solicitud enviada. Cuando habiliten tu acceso vas a poder ingresar.</p>
+      <p class="auth-footer"><a href="/auth/login">Ingresar</a></p>
+    <% } else { %>
+      <% if (errors.general) { %>
+        <p class="error-msg" role="alert"><%= errors.general %></p>
+      <% } %>
+
+      <form method="post" action="/auth/register">
+        <label class="auth-label">
+          <span><i class="fa-solid fa-user" aria-hidden="true"></i> Nombre</span>
+          <input type="text" name="nombre" value="<%= values.nombre %>" required autocomplete="name">
+          <% if (errors.nombre) { %><small class="error-msg"><%= errors.nombre %></small><% } %>
+        </label>
+        <label class="auth-label">
+          <span><i class="fa-solid fa-envelope" aria-hidden="true"></i> Email</span>
+          <input type="email" name="email" value="<%= values.email %>" required autocomplete="email">
+          <% if (errors.email) { %><small class="error-msg"><%= errors.email %></small><% } %>
+        </label>
+        <label class="auth-label">
+          <span><i class="fa-solid fa-lock" aria-hidden="true"></i> Contraseña</span>
+          <input type="password" name="password" required autocomplete="new-password" minlength="8">
+          <% if (errors.password) { %><small class="error-msg"><%= errors.password %></small><% } %>
+        </label>
+        <label class="auth-label">
+          <span><i class="fa-solid fa-lock" aria-hidden="true"></i> Confirmar contraseña</span>
+          <input type="password" name="passwordConfirm" required autocomplete="new-password">
+          <% if (errors.passwordConfirm) { %><small class="error-msg"><%= errors.passwordConfirm %></small><% } %>
+        </label>
+        <button type="submit" class="btn-accent auth-submit">
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+          Solicitar acceso
+        </button>
+      </form>
+
+      <p class="auth-footer">¿Ya tenés cuenta? <a href="/auth/login">Ingresar</a></p>
     <% } %>
-
-    <form method="post" action="/auth/register">
-      <label>
-        Nombre
-        <input type="text" name="nombre" value="<%= values.nombre %>" required autocomplete="name">
-        <% if (errors.nombre) { %><small class="error-msg"><%= errors.nombre %></small><% } %>
-      </label>
-      <label>
-        Email
-        <input type="email" name="email" value="<%= values.email %>" required autocomplete="email">
-        <% if (errors.email) { %><small class="error-msg"><%= errors.email %></small><% } %>
-      </label>
-      <label>
-        Contraseña
-        <input type="password" name="password" required autocomplete="new-password" minlength="8">
-        <% if (errors.password) { %><small class="error-msg"><%= errors.password %></small><% } %>
-      </label>
-      <label>
-        Confirmar contraseña
-        <input type="password" name="passwordConfirm" required autocomplete="new-password">
-        <% if (errors.passwordConfirm) { %><small class="error-msg"><%= errors.passwordConfirm %></small><% } %>
-      </label>
-      <button type="submit">Registrarme</button>
-    </form>
-
-    <p class="auth-footer">¿Ya tenés cuenta? <a href="/auth/login">Iniciá sesión</a></p>
   </div>
 </div>

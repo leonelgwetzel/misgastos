@@ -1,0 +1,57 @@
+<div class="year-dash">
+  <div class="page-heading">
+    <h1>Resumen anual</h1>
+    <nav class="year-dash-nav" aria-label="Año">
+      <a class="btn btn-ghost btn-sm" href="/dashboard?year=<%= calendar.prevYear %>" aria-label="Año anterior">
+        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+      </a>
+      <span class="year-dash-year"><%= calendar.year %></span>
+      <a class="btn btn-ghost btn-sm" href="/dashboard?year=<%= calendar.nextYear %>" aria-label="Año siguiente">
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+      </a>
+    </nav>
+  </div>
+
+  <div class="page-pane panel year-dash-pane">
+  <div class="year-dash-summary">
+    <div class="year-dash-metric">
+      <span class="metric-label">Total del año</span>
+      <span class="year-dash-metric-value amount"><%= calendar.totalFormateado %></span>
+    </div>
+    <div class="year-dash-metric">
+      <span class="metric-label">Gastos fijos</span>
+      <span class="year-dash-metric-value amount"><%= calendar.totalFijosFormateado %></span>
+    </div>
+    <div class="year-dash-metric">
+      <span class="metric-label">Tarjetas</span>
+      <span class="year-dash-metric-value amount"><%= calendar.totalTarjetasFormateado %></span>
+    </div>
+  </div>
+
+  <ol class="year-cal" aria-label="Calendario de <%= calendar.year %>">
+    <% calendar.months.forEach(function(m) { %>
+      <li>
+        <a
+          class="year-cal-cell<%= m.isCurrent ? ' is-current' : '' %><%= m.isPast ? ' is-past' : '' %>"
+          href="<%= m.href %>"
+          title="Abrir <%= m.label %> <%= m.year %>">
+          <span class="year-cal-top">
+            <span class="year-cal-name"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> <%= m.label %></span>
+            <span class="year-cal-total amount"><%= m.totalFormateado %></span>
+          </span>
+          <span class="year-cal-split">
+            <span class="year-cal-part">
+              <span class="year-cal-part-label">Fijos</span>
+              <span class="year-cal-part-val amount"><%= m.fijosFormateado %></span>
+            </span>
+            <span class="year-cal-part">
+              <span class="year-cal-part-label">Tarjetas</span>
+              <span class="year-cal-part-val amount"><%= m.tarjetasFormateado %></span>
+            </span>
+          </span>
+        </a>
+      </li>
+    <% }); %>
+  </ol>
+  </div>
+</div>

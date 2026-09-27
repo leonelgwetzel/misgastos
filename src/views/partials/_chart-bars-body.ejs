@@ -1,0 +1,37 @@
+<% const barras = datos || []; %>
+<% if (barras.length > 0) { %>
+  <div class="cat-bars" role="img" aria-label="<%= typeof ariaLabel !== 'undefined' ? ariaLabel : 'Gastos por categoría' %>">
+    <div class="cat-bars-head">
+      <span class="cat-bars-head-label">Total</span>
+      <span class="cat-bars-head-value amount"><%= barras.totalFormateado %></span>
+      <span class="cat-bars-head-count"><%= barras.length %> categoría<%= barras.length === 1 ? '' : 's' %></span>
+    </div>
+
+    <ul class="cat-bars-list">
+      <% barras.forEach(function(cat) { %>
+        <li class="cat-bar-item">
+          <span class="cat-bar-ico" style="background: <%= cat.color %>;">
+            <i class="fa-solid <%= cat.icon || 'fa-tag' %>" aria-hidden="true"></i>
+          </span>
+          <div class="cat-bar-body">
+            <div class="cat-bar-top">
+              <span class="cat-bar-name"><%= cat.alias %></span>
+              <span class="cat-bar-amount amount"><%= cat.totalFormateado %></span>
+            </div>
+            <div class="cat-bar-track" aria-hidden="true">
+              <span
+                class="cat-bar-fill"
+                style="width: <%= Math.max(cat.pctDelMayor || 0, 1.5) %>%; background: <%= cat.color %>;"></span>
+            </div>
+            <span class="cat-bar-pct"><%= cat.pct %>% del total</span>
+          </div>
+        </li>
+      <% }); %>
+    </ul>
+  </div>
+<% } else { %>
+  <div class="pie-chart-empty">
+    <i class="fa-solid fa-chart-simple pie-chart-empty-ico" aria-hidden="true"></i>
+    <p class="hint"><%= typeof emptyHint !== 'undefined' ? emptyHint : 'Sin datos para segmentar.' %></p>
+  </div>
+<% } %>

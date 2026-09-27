@@ -1,0 +1,3 @@
+<span class="badge<%= typeof variante !== 'undefined' && variante ? ' is-' + variante : '' %>">
+  <% if (typeof icono !== 'undefined' && icono) { %><i class="fa-solid <%= icono %>" aria-hidden="true"></i><% } %><%= texto %>
+</span>

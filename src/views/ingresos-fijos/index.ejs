@@ -1,0 +1,207 @@
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · Ingresos fijos</p>
+<div class="page-heading">
+  <h1>Ingresos fijos</h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-ingreso-fijo', listHref: '/ingresos-fijos' }) %>
+</div>
+
+<% if (success) { %>
+  <p class="success-msg" role="status">
+    <% if (success === 'creado') { %>Ingreso fijo creado.<% } %>
+    <% if (success === 'historial') { %>Nuevo monto registrado.<% } %>
+    <% if (success === 'override') { %>Mes actualizado.<% } %>
+    <% if (success === 'desactivado') { %>Ingreso fijo desactivado.<% } %>
+  </p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de ingresos fijos</h2>
+    <% if (ingresosFijos.length === 0) { %>
+      <p class="hint">Sin ingresos fijos. Ej: sueldo, alquiler cobrado, freelance mensual. <a href="#form" onclick="document.getElementById('capture-ingreso-fijo').showModal(); return false;">Creá el primero</a>.</p>
+    <% } else { %>
+      <div class="table-wrap dt-wrap">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th class="col-num">Monto</th>
+              <th>Cuenta</th>
+              <th>Día</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% ingresosFijos.filter(f => f.activo).forEach(function(f) { %>
+              <tr>
+                <td data-label="Descripción"><strong><%= f.descripcion %></strong></td>
+                <td class="col-num" data-label="Monto"><%= f.divisa.simbolo %> <%= f.historial[0] ? Number(f.historial[0].monto).toLocaleString('es-AR') : '—' %></td>
+                <td data-label="Cuenta"><%= f.cuenta.nombre %></td>
+                <td data-label="Día"><%= f.diaDelMes %></td>
+                <td class="col-actions" data-label="Acciones">
+                  <div class="dt-actions">
+                    <button type="button" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial" onclick="document.getElementById('logs-ing-fijo-<%= f.id %>').showModal()">
+                      <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="dt-ico-btn is-more" title="Gestionar" aria-label="Gestionar" onclick="document.getElementById('capture-ing-fijo-<%= f.id %>').showModal()">
+                      <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                    </button>
+                    <form method="post" action="/ingresos-fijos/<%= f.id %>/eliminar" onsubmit="return confirm('¿Desactivar?')">
+                      <button type="submit" class="dt-ico-btn is-del" title="Desactivar" aria-label="Desactivar">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </article>
+</section>
+
+<dialog class="capture-sheet" id="capture-ingreso-fijo">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2>Nuevo ingreso fijo</h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="/ingresos-fijos">
+      <div class="cfg-form-fields">
+        <label>
+          Descripción
+          <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required placeholder="Ej. Sueldo">
+        </label>
+        <label>
+          Monto mensual
+          <input type="number" name="monto" step="0.01" min="0.01" value="<%= values.monto || '' %>" required>
+        </label>
+        <label>
+          Cuenta destino
+          <%- include('../partials/_app-select', {
+            name: 'cuentaId',
+            required: true,
+            value: values.cuentaId || '',
+            options: [{ value: '', label: '—' }].concat(cuentas.map(function(c) { return { value: c.id, label: c.nombre + ' · ' + c.divisa.codigo }; }))
+          }) %>
+        </label>
+        <% if (categorias && categorias.length) { %>
+          <label>
+            Categoría (opcional)
+            <%- include('../partials/_app-select', {
+              name: 'categoriaId',
+              value: values.categoriaId || '',
+              options: [{ value: '', label: '—' }].concat(categorias.map(function(cat) { return { value: cat.id, label: cat.nombre }; }))
+            }) %>
+          </label>
+        <% } %>
+        <div class="grid-2">
+          <label>
+            Día del mes
+            <input type="number" name="diaDelMes" min="1" max="28" value="<%= values.diaDelMes || 1 %>">
+          </label>
+          <label>
+            Vigente desde
+            <input type="date" name="vigenteDesde" value="<%= values.vigenteDesde || '' %>" required>
+          </label>
+        </div>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Crear ingreso fijo" aria-label="Crear ingreso fijo">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <button type="reset" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+          <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<% ingresosFijos.filter(f => f.activo).forEach(function(f) { %>
+<dialog class="capture-sheet" id="capture-ing-fijo-<%= f.id %>">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2>Gestionar <%= f.descripcion %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="/ingresos-fijos/<%= f.id %>/historial">
+      <h3 class="cfg-log-group-title">Nuevo monto</h3>
+      <div class="cfg-form-fields">
+        <label>
+          Vigente desde
+          <input type="date" name="vigenteDesde" required>
+        </label>
+        <label>
+          Monto
+          <input type="number" name="monto" step="0.01" min="0.01" required>
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Actualizar monto" aria-label="Actualizar monto">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+    <form class="cat-form cfg-ajuste-form" method="post" action="/ingresos-fijos/<%= f.id %>/override">
+      <input type="hidden" name="monthKey" value="<%= mesActual %>">
+      <h3 class="cfg-log-group-title">Solo <%= mesActual %></h3>
+      <div class="cfg-form-fields">
+        <label class="checkbox-row">
+          <input type="checkbox" name="omitido" value="true">
+          <span>Omitir este mes</span>
+        </label>
+        <label>
+          Monto distinto (opcional)
+          <input type="number" name="montoOverride" step="0.01" min="0.01" placeholder="Vacío = habitual">
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Aplicar al mes" aria-label="Aplicar al mes">
+          <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+<% }); %>
+
+<% ingresosFijos.filter(f => f.activo).forEach(function(f) { %>
+  <%- include('../partials/_cfg-logs-sheet', {
+    dialogId: 'logs-ing-fijo-' + f.id,
+    title: 'Historial de ' + f.descripcion,
+    logGroups: [
+      {
+        heading: 'Montos',
+        columns: ['Vigente desde', 'Monto', 'Registrado'],
+        rows: (f.historial || []).map(function(h) {
+          return [
+            new Date(h.vigenteDesde).toLocaleDateString('es-AR'),
+            (h.divisa ? h.divisa.simbolo : f.divisa.simbolo) + ' ' + Number(h.monto).toLocaleString('es-AR'),
+            new Date(h.createdAt).toLocaleDateString('es-AR')
+          ];
+        })
+      },
+      {
+        heading: 'Ajustes de un mes',
+        columns: ['Mes', 'Cambio'],
+        rows: (f.overrides || []).map(function(o) {
+          var mes = new Date(o.mesReferencia).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+          var cambio = o.omitido
+            ? 'Omitido'
+            : (o.montoOverride != null ? 'Monto ' + f.divisa.simbolo + ' ' + Number(o.montoOverride).toLocaleString('es-AR') : '—');
+          return [mes, cambio];
+        })
+      }
+    ]
+  }) %>
+<% }); %>
+
+<%- include('../partials/_capture-boot', { dialogId: 'capture-ingreso-fijo', open: Boolean(errors && Object.keys(errors).length > 0) }) %>

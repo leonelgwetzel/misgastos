@@ -1,0 +1,45 @@
+<% const velas = datos || []; %>
+<% const etiquetaCount = typeof countLabel !== 'undefined' && countLabel ? countLabel : 'categoría'; %>
+<% if (velas.length > 0) { %>
+  <div class="cat-candles" role="img" aria-label="<%= typeof ariaLabel !== 'undefined' ? ariaLabel : 'Gastos por categoría' %>">
+    <% if (typeof hideHead === 'undefined' || !hideHead) { %>
+      <div class="cat-candles-head">
+        <span class="cat-candles-head-label">Total</span>
+        <span class="cat-candles-head-value amount"><%= velas.totalFormateado %></span>
+        <span class="cat-candles-head-count"><%= velas.length %> <%= etiquetaCount %><%= velas.length === 1 ? '' : 's' %></span>
+      </div>
+    <% } %>
+
+    <div class="cat-candles-plot">
+      <% velas.forEach(function(cat, i) {
+        const body = Math.max(cat.pctDelMayor || 0, 8);
+        const icono = cat.icon || cat.icono || '';
+      %>
+        <div
+          class="cat-candle"
+          style="--cat-i: <%= i %>; --cat-color: <%= cat.color %>; --cat-body: <%= body %>%;"
+          title="<%= cat.alias %>: <%= cat.totalFormateado %><%= cat.pct != null ? ' (' + cat.pct + '% del total)' : '' %>">
+          <div class="cat-candle-plot">
+            <div class="cat-candle-rail">
+              <span class="cat-candle-badge" aria-hidden="true"><% if (icono) { %><i class="fa-solid <%= icono %>"></i> <% } %><%= cat.totalFormateado %></span>
+              <div class="cat-candle-track" aria-hidden="true">
+                <span class="cat-candle-fill"></span>
+              </div>
+            </div>
+          </div>
+          <span class="cat-candle-name"><%= cat.alias %></span>
+          <% if (cat.meta) { %>
+            <span class="cat-candle-pct"><%= cat.meta %></span>
+          <% } else if (cat.pct != null) { %>
+            <span class="cat-candle-pct"><%= cat.pct %>%</span>
+          <% } %>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+<% } else { %>
+  <div class="pie-chart-empty">
+    <i class="fa-solid fa-chart-simple pie-chart-empty-ico" aria-hidden="true"></i>
+    <p class="hint"><%= typeof emptyHint !== 'undefined' ? emptyHint : 'Sin datos para segmentar.' %></p>
+  </div>
+<% } %>

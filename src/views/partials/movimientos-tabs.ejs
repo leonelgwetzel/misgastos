@@ -1,0 +1,12 @@
+<div class="section-tabs" role="tablist" aria-label="Tipo de movimiento">
+  <a
+    href="/gastos"
+    class="section-tab<%= typeof activeTab !== 'undefined' && activeTab === 'gastos' ? ' section-tab-active' : '' %>"
+    role="tab"
+    aria-selected="<%= typeof activeTab !== 'undefined' && activeTab === 'gastos' %>">Gastos</a>
+  <a
+    href="/ingresos"
+    class="section-tab<%= typeof activeTab !== 'undefined' && activeTab === 'ingresos' ? ' section-tab-active' : '' %>"
+    role="tab"
+    aria-selected="<%= typeof activeTab !== 'undefined' && activeTab === 'ingresos' %>">Ingresos</a>
+</div>

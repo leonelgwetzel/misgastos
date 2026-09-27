@@ -1,130 +1,140 @@
-<h1>Gastos</h1>
+<div class="page-heading">
+  <h1>Gastos</h1>
+  <button type="button" class="btn-nuevo" id="btn-nuevo-gasto" onclick="document.getElementById('capture-gasto').showModal()">
+    <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+    <span>Nuevo</span>
+  </button>
+</div>
 
 <% if (success) { %>
-  <p class="success-msg" role="status">Gasto registrado.</p>
+  <p class="success-msg toast-success" role="status">
+    <% if (success === 'creado') { %>Gasto registrado.<% } %>
+    <% if (success === 'actualizado') { %>Gasto actualizado.<% } %>
+    <% if (success === 'eliminado') { %>Gasto eliminado.<% } %>
+  </p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
 <% } %>
 <% if (errors.general) { %>
   <p class="error-msg" role="alert"><%= errors.general %></p>
 <% } %>
 
-<section class="two-col">
-  <article class="panel">
-    <h2>Nuevo gasto</h2>
-    <form method="post" action="/gastos" id="gasto-form">
-      <label>
-        Medio de pago
-        <select name="medioPago" id="medioPago" required>
-          <option value="TARJETA" <%= values.medioPago === 'TARJETA' ? 'selected' : '' %>>Tarjeta</option>
-          <option value="EFECTIVO" <%= values.medioPago === 'EFECTIVO' ? 'selected' : '' %>>Efectivo</option>
-          <option value="DEBITO" <%= values.medioPago === 'DEBITO' ? 'selected' : '' %>>Débito</option>
-        </select>
-      </label>
-
-      <div id="campos-tarjeta">
-        <% if (tarjetas.length === 0) { %>
-          <p class="hint"><a href="/tarjetas">Agregá una tarjeta</a> para gastos con tarjeta.</p>
-        <% } else { %>
-          <label>
-            Tarjeta
-            <select name="tarjetaId">
-              <% tarjetas.filter(t => t.titularidad === 'PROPIA').forEach(function(t) { %>
-                <option value="<%= t.id %>" <%= values.tarjetaId === t.id ? 'selected' : '' %>><%= t.alias %> (<%= t.divisa.codigo %>)</option>
-              <% }); %>
-            </select>
-          </label>
-          <label>
-            Cuotas
-            <input type="number" name="cantidadCuotas" min="1" max="48" value="<%= values.cantidadCuotas || 1 %>">
-          </label>
+<section class="data-page panel page-pane">
+  <div class="data-list-header dt-toolbar-row">
+    <div>
+      <h2>Todos los gastos</h2>
+      <p class="hint data-list-count">
+        <% if (pagination.total === 0) { %>Sin resultados<% } else { %>
+          <%= pagination.total %> gasto<%= pagination.total === 1 ? '' : 's' %>
+          <% if (filtro.q) { %> · filtro “<%= filtro.q %>”<% } %>
         <% } %>
-      </div>
-
-      <div id="campos-efectivo" hidden>
-        <label>
-          Divisa
-          <select name="divisaId">
-            <% divisas.forEach(function(d) { %>
-              <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %></option>
-            <% }); %>
-          </select>
-        </label>
-        <label>
-          Cuenta (opcional)
-          <select name="cuentaId">
-            <option value="">Sin cuenta</option>
-            <% cuentas.forEach(function(c) { %>
-              <option value="<%= c.id %>" <%= values.cuentaId === c.id ? 'selected' : '' %>><%= c.nombre %> (<%= c.divisa.codigo %>)</option>
-            <% }); %>
-          </select>
-        </label>
-      </div>
-
-      <label>
-        Descripción
-        <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required placeholder="Ej. Supermercado">
-        <% if (errors.descripcion) { %><small class="error-msg"><%= errors.descripcion %></small><% } %>
-      </label>
-      <label>
-        Monto
-        <input type="number" name="montoOriginal" step="0.01" min="0.01" value="<%= values.montoOriginal || '' %>" required>
-        <% if (errors.montoOriginal) { %><small class="error-msg"><%= errors.montoOriginal %></small><% } %>
-      </label>
-      <label>
-        Fecha de compra
-        <input type="date" name="fechaCompra" value="<%= values.fechaCompra || '' %>" required>
-      </label>
-      <label>
-        Categoría
-        <select name="categoriaId">
-          <option value="">Sin categoría</option>
-          <% categorias.forEach(function(c) { %>
-            <option value="<%= c.id %>" <%= values.categoriaId === c.id ? 'selected' : '' %>><%= c.nombre %></option>
-          <% }); %>
-        </select>
-      </label>
-      <button type="submit">Registrar gasto</button>
+      </p>
+    </div>
+    <form class="data-page-toolbar" method="get" action="/gastos" role="search">
+      <input type="search" name="q" value="<%= filtro.q || '' %>" placeholder="Buscar…" aria-label="Buscar gasto">
+      <button type="submit" class="secondary outline btn-sm">Buscar</button>
+      <% if (filtro.q) { %><a href="/gastos" class="secondary outline btn-sm">Limpiar</a><% } %>
     </form>
-  </article>
+  </div>
 
-  <article class="panel">
-    <h2>Últimos gastos</h2>
-    <% if (gastos.length === 0) { %>
-      <p class="hint">Sin gastos registrados.</p>
-    <% } else { %>
-      <ul class="card-list">
-        <% gastos.forEach(function(g) { %>
-          <li>
-            <div class="item-row">
-              <span class="item-title"><%= g.descripcion %></span>
-              <span class="expense-amount"><%= g.divisa.simbolo %> <%= Number(g.montoOriginal).toLocaleString('es-AR') %></span>
-            </div>
-            <span class="hint">
-              <%= new Date(g.fechaCompra).toLocaleDateString('es-AR') %>
-              · <%= g.medioPago.toLowerCase() %>
-              <% if (g.tarjeta) { %> · <%= g.tarjeta.alias %><% } %>
-              <% if (g.cuenta) { %> · <%= g.cuenta.nombre %><% } %>
-              <% if (g.cantidadCuotas > 1) { %> · <%= g.cantidadCuotas %> cuotas<% } %>
-            </span>
-          </li>
-        <% }); %>
-      </ul>
+  <% if (gastos.length === 0) { %>
+    <div class="empty-state">
+      <i class="fa-solid fa-receipt empty-ico" aria-hidden="true"></i>
+      <% if (filtro.q) { %>
+        <p>No hay gastos que coincidan con “<%= filtro.q %>”.</p>
+      <% } else { %>
+        <p>Sin gastos registrados.</p>
+        <p class="empty-actions">
+          <a href="#nuevo" onclick="document.getElementById('capture-gasto').showModal(); return false;">Registrar el primero</a>
+        </p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="table-wrap dt-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Fecha</th>
+            <th>Medio</th>
+            <th>Detalle</th>
+            <th class="col-num">Monto</th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% gastos.forEach(function(g) { %>
+            <% const deleteQs = []; if (pagination.page > 1) deleteQs.push('page=' + pagination.page); if (filtro.q) deleteQs.push('q=' + encodeURIComponent(filtro.q)); const deleteAction = '/gastos/' + g.id + '/eliminar' + (deleteQs.length ? '?' + deleteQs.join('&') : ''); %>
+            <tr>
+              <td data-label="Descripción"><strong><%= g.descripcion %></strong><% if (g.cantidadCuotas > 1) { %> <span class="hint"><%= g.cantidadCuotas %> cuotas</span><% } %></td>
+              <td data-label="Fecha"><%= new Date(g.fechaCompra).toLocaleDateString('es-AR') %></td>
+              <td data-label="Medio"><%= g.medioPago.toLowerCase() %></td>
+              <td data-label="Detalle"><% if (g.tarjeta) { %><%= g.tarjeta.alias %><% } else if (g.cuenta) { %><%= g.cuenta.nombre %><% } else { %>—<% } %></td>
+              <td class="col-num" data-label="Monto"><%= g.divisa.simbolo %> <%= Number(g.montoOriginal).toLocaleString('es-AR') %></td>
+              <td class="col-actions" data-label="Acciones">
+                <div class="dt-actions">
+                  <a href="/gastos?edit=<%= g.id %><%= filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? '&page=' + pagination.page : '' %>#nuevo" class="secondary outline btn-sm">Editar</a>
+                  <form method="post" action="<%= deleteAction %>"
+                        onsubmit="return confirm('<%= g.medioPago === 'TARJETA' ? (g.gastoFijoId ? '¿Borrar este gasto y todas sus cuotas? Si es de un gasto fijo, puede regenerarse al entrar al inicio.' : '¿Borrar este gasto y todas sus cuotas?') : '¿Borrar este gasto?' %>')">
+                    <button type="submit" class="secondary outline btn-sm">Borrar</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (pagination.totalPages > 1) { %>
+      <nav class="gastos-pagination" aria-label="Paginación de gastos">
+        <% if (pagination.prevUrl) { %>
+          <a href="<%= pagination.prevUrl %>" class="secondary outline btn-sm">‹ Anterior</a>
+        <% } else { %>
+          <span class="btn-sm pagination-disabled" aria-hidden="true">‹ Anterior</span>
+        <% } %>
+        <span class="pagination-info">Página <%= pagination.page %> de <%= pagination.totalPages %></span>
+        <% if (pagination.nextUrl) { %>
+          <a href="<%= pagination.nextUrl %>" class="secondary outline btn-sm">Siguiente ›</a>
+        <% } else { %>
+          <span class="btn-sm pagination-disabled" aria-hidden="true">Siguiente ›</span>
+        <% } %>
+      </nav>
     <% } %>
-  </article>
+  <% } %>
 </section>
+
+<dialog class="capture-sheet" id="capture-gasto">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2><%= editing ? 'Editar gasto' : 'Nuevo gasto' %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <%- include('../partials/form-gasto') %>
+  </div>
+</dialog>
 
 <script>
   (function () {
+    const dialog = document.getElementById('capture-gasto');
+    const shouldOpen = location.hash === '#nuevo' || <%= editing ? 'true' : 'false' %> || <%= Object.keys(errors || {}).length ? 'true' : 'false' %>;
+    if (dialog && shouldOpen) dialog.showModal();
+    window.addEventListener('hashchange', function () {
+      if (location.hash === '#nuevo' && dialog) dialog.showModal();
+    });
     const medio = document.getElementById('medioPago');
+    if (!medio) return;
     const tarjeta = document.getElementById('campos-tarjeta');
     const efectivo = document.getElementById('campos-efectivo');
     function toggle() {
       const esTarjeta = medio.value === 'TARJETA';
       tarjeta.hidden = !esTarjeta;
       efectivo.hidden = esTarjeta;
+      tarjeta.querySelectorAll('select, input').forEach(function (el) { el.disabled = !esTarjeta; });
+      efectivo.querySelectorAll('select, input').forEach(function (el) { el.disabled = esTarjeta; });
     }
     medio.addEventListener('change', toggle);
     toggle();
   })();
 </script>
-
-<a href="/" class="page-back">← Inicio</a>

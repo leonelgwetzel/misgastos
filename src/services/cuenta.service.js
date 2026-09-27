@@ -49,6 +49,24 @@ async function create(userId, data) {
   });
 }
 
+async function update(userId, cuentaId, data) {
+  const parsed = z.object({
+    nombre: z.string().min(1, 'Nombre requerido').max(80),
+    tipo: z.enum(['BANCO', 'BILLETERA', 'EFECTIVO']).optional(),
+  }).parse(data);
+
+  await getForUser(cuentaId, userId);
+
+  return prisma.cuenta.update({
+    where: { id: cuentaId },
+    data: {
+      nombre: parsed.nombre,
+      ...(parsed.tipo ? { tipo: parsed.tipo } : {}),
+    },
+    include: { divisa: true },
+  });
+}
+
 async function deactivate(userId, cuentaId) {
   await getForUser(cuentaId, userId);
   return prisma.cuenta.update({
@@ -86,6 +104,7 @@ module.exports = {
   getForUser,
   listByUser,
   create,
+  update,
   deactivate,
   saldoAtDate,
   applyMovimientoToSaldo,

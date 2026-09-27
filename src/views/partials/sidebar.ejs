@@ -1,0 +1,61 @@
+<%
+  var path = typeof currentPath !== 'undefined' ? currentPath : '/';
+  var isDash = path.startsWith('/dashboard');
+  var isInicio = path === '/';
+  var isMov = path.startsWith('/movimientos') || (path.startsWith('/ingresos') && !path.startsWith('/ingresos-fijos')) || (path.startsWith('/gastos') && !path.startsWith('/gastos-fijos'));
+  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/gastos-fijos') || path.startsWith('/ingresos-fijos') || path.startsWith('/categorias') || path.startsWith('/usuarios');
+%>
+<div class="rail-stack">
+  <aside class="rail" aria-label="Navegación">
+    <div class="rail-brand">
+      <a href="/dashboard" title="misgastos">
+        <img class="rail-brand-mark" src="/img/logo-mark.png" width="32" height="32" alt="">
+        <span class="rail-label">misgastos</span>
+      </a>
+      <button
+        type="button"
+        class="rail-expand"
+        @click="toggleRail()"
+        :aria-expanded="railExpanded.toString()"
+        :title="railExpanded ? 'Acoplar menú' : 'Expandir menú'"
+        :aria-label="railExpanded ? 'Acoplar menú' : 'Expandir menú'">
+        <i class="fa-solid" :class="railExpanded ? 'fa-angles-left' : 'fa-angles-right'" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <nav class="rail-nav">
+      <p class="rail-section">Trabajo</p>
+      <a href="/dashboard" class="rail-link<%= isDash ? ' is-active' : '' %>" title="Dashboard">
+        <span class="rail-ico" aria-hidden="true"><i class="fa-solid fa-chart-pie"></i></span>
+        <span class="rail-label">Dashboard</span>
+      </a>
+      <a href="/" class="rail-link<%= isInicio ? ' is-active' : '' %>" title="Mes">
+        <span class="rail-ico" aria-hidden="true"><i class="fa-solid fa-calendar-days"></i></span>
+        <span class="rail-label">Mes</span>
+      </a>
+      <a href="/gastos" class="rail-link<%= isMov ? ' is-active' : '' %>" title="Movimientos">
+        <span class="rail-ico" aria-hidden="true"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+        <span class="rail-label">Movimientos</span>
+      </a>
+
+      <p class="rail-section">Sistema</p>
+      <a href="/configuracion" class="rail-link<%= isConfig ? ' is-active' : '' %>" title="Configuración">
+        <span class="rail-ico" aria-hidden="true"><i class="fa-solid fa-gear"></i></span>
+        <span class="rail-label">Configuración</span>
+      </a>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="rail-user" title="<%= user.nombre %>">
+        <span class="rail-avatar" aria-hidden="true"><%= (user.nombre || '?').charAt(0).toUpperCase() %></span>
+        <span class="rail-label rail-user-name"><%= user.nombre %></span>
+      </div>
+      <form action="/auth/logout" method="post" class="rail-logout">
+        <button type="submit" class="btn btn-ghost btn-sm" title="Salir">
+          <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+          <span class="rail-label">Salir</span>
+        </button>
+      </form>
+    </div>
+  </aside>
+</div>

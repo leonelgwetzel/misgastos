@@ -1,0 +1,11 @@
+<script>
+  (function () {
+    const dialog = document.getElementById('<%= dialogId %>');
+    if (!dialog) return;
+    const shouldOpen = <%= open ? 'true' : 'false' %> || location.hash === '#form';
+    if (shouldOpen) dialog.showModal();
+    window.addEventListener('hashchange', function () {
+      if (location.hash === '#form') dialog.showModal();
+    });
+  })();
+</script>

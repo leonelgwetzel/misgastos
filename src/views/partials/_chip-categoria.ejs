@@ -1,0 +1,12 @@
+<%
+  const chipNombre = nombre || 'Sin categoría';
+  const chipColor = (typeof color !== 'undefined' && color) ? color : '#8e8e99';
+  const chipIcono = (typeof icono !== 'undefined' && icono) ? icono : 'fa-tag';
+  const chipSoloIcono = typeof soloIcono !== 'undefined' && soloIcono;
+%>
+<span class="chip-cat" title="<%= chipNombre %>">
+  <span class="chip-cat-ico" style="background: <%= chipColor %>;">
+    <i class="fa-solid <%= chipIcono %>" aria-hidden="true"></i>
+  </span>
+  <% if (!chipSoloIcono) { %><span class="chip-cat-name"><%= chipNombre %></span><% } %>
+</span>

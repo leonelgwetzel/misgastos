@@ -26,6 +26,20 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-dev-secret-change-in-production}
       NODE_ENV: production
       PORT: 3000
+      TZ: America/Argentina/Buenos_Aires
+    depends_on:
+      db:
+        condition: service_healthy
+
+  bot:
+    build: .
+    restart: unless-stopped
+    command: node src/bot/index.js
+    environment:
+      DATABASE_URL: postgresql://misgastos:misgastos@db:5432/misgastos
+      NODE_ENV: production
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TZ: America/Argentina/Buenos_Aires
     depends_on:
       db:
         condition: service_healthy

@@ -10,6 +10,13 @@ const gastoRoutes = require('./routes/gasto.routes');
 const cuentaRoutes = require('./routes/cuenta.routes');
 const divisaRoutes = require('./routes/divisa.routes');
 const gastoFijoRoutes = require('./routes/gastoFijo.routes');
+const ingresoFijoRoutes = require('./routes/ingresoFijo.routes');
+const categoriaRoutes = require('./routes/categoria.routes');
+const ingresoRoutes = require('./routes/ingreso.routes');
+const movimientosRoutes = require('./routes/movimientos.routes');
+const configRoutes = require('./routes/config.routes');
+const yearDashboardRoutes = require('./routes/yearDashboard.routes');
+const usuarioRoutes = require('./routes/usuario.routes');
 
 function createApp() {
   const app = express();
@@ -23,13 +30,24 @@ function createApp() {
   app.use(express.json());
   app.use(createSessionMiddleware());
   app.use(attachUser);
+  app.use((req, res, next) => {
+    res.locals.currentPath = req.path;
+    next();
+  });
 
   app.use('/auth', authRoutes);
+  app.use('/movimientos', movimientosRoutes);
+  app.use('/configuracion', configRoutes);
+  app.use('/dashboard', yearDashboardRoutes);
   app.use('/tarjetas', tarjetaRoutes);
   app.use('/gastos', gastoRoutes);
   app.use('/cuentas', cuentaRoutes);
   app.use('/divisas', divisaRoutes);
   app.use('/gastos-fijos', gastoFijoRoutes);
+  app.use('/ingresos-fijos', ingresoFijoRoutes);
+  app.use('/categorias', categoriaRoutes);
+  app.use('/usuarios', usuarioRoutes);
+  app.use('/ingresos', ingresoRoutes);
   app.use('/', indexRoutes);
 
   app.use((req, res) => {

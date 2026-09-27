@@ -1,15 +1,27 @@
 const prisma = require('../lib/prisma');
 const { splitInstallments } = require('../lib/money');
-const { monthKeyFromDate, dateFromMonthKey, isCycleOpen } = require('../lib/dates');
+const {
+  monthKeyFromDate,
+  dateFromMonthKey,
+  isCycleOpen,
+  shiftCalendarMonth,
+} = require('../lib/dates');
 const cicloService = require('./cicloFacturacion.service');
 const divisaService = require('./divisa.service');
 
-async function generateCuotasForGasto(gasto, tarjeta, tx = prisma) {
+function mesImpactoFromPrimera(mesImpactoPrimera, installmentIndex) {
+  const [year, month] = mesImpactoPrimera.split('-').map(Number);
+  const shifted = shiftCalendarMonth(year, month, installmentIndex);
+  return dateFromMonthKey(`${shifted.year}-${String(shifted.month).padStart(2, '0')}`);
+}
+
+async function generateCuotasForGasto(gasto, tarjeta, tx = prisma, options = {}) {
   const db = tx;
   const amounts = splitInstallments(gasto.montoOriginal, gasto.cantidadCuotas);
   const fechaCompra = new Date(gasto.fechaCompra);
   const ciclo = await cicloService.findCicloForPurchase(tarjeta, fechaCompra);
   const cuotas = [];
+  const mesImpactoPrimera = options.mesImpactoPrimera || null;
 
   const showCuotaCero = isCycleOpen(ciclo.fechaCierre);
   const purchaseMonth = dateFromMonthKey(monthKeyFromDate(fechaCompra));
@@ -34,7 +46,9 @@ async function generateCuotasForGasto(gasto, tarjeta, tx = prisma) {
   }
 
   for (let i = 0; i < gasto.cantidadCuotas; i += 1) {
-    const mesImpacto = await cicloService.getMesVencimientoForInstallment(ciclo, i);
+    const mesImpacto = mesImpactoPrimera
+      ? mesImpactoFromPrimera(mesImpactoPrimera, i)
+      : await cicloService.getMesVencimientoForInstallment(ciclo, i);
     const { tasaConversion, montoPrincipal } = await divisaService.resolveMontoPrincipal(
       gasto.usuarioId,
       gasto.divisaId,

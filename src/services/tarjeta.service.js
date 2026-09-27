@@ -67,6 +67,35 @@ async function create(userId, data) {
   return tarjeta;
 }
 
+const tarjetaUpdateSchema = z.object({
+  alias: z.string().min(1, 'Alias requerido').max(80),
+  banco: z.string().max(80).optional().or(z.literal('')),
+  titularidad: z.enum(['PROPIA', 'TERCERO']).default('PROPIA'),
+  defaultCierreDia: z.coerce.number().int().min(1).max(28),
+  defaultVencimientoMes: z.coerce.number().int().min(0).max(3).default(1),
+});
+
+async function update(userId, tarjetaId, data) {
+  const parsed = tarjetaUpdateSchema.parse(data);
+
+  const tarjeta = await prisma.tarjeta.findFirst({
+    where: { id: tarjetaId, usuarioId: userId, activa: true },
+  });
+  if (!tarjeta) throw new Error('Tarjeta no encontrada');
+
+  return prisma.tarjeta.update({
+    where: { id: tarjetaId },
+    data: {
+      alias: parsed.alias,
+      banco: parsed.banco || null,
+      titularidad: parsed.titularidad,
+      defaultCierreDia: parsed.defaultCierreDia,
+      defaultVencimientoMes: parsed.defaultVencimientoMes,
+    },
+    include: { divisa: true },
+  });
+}
+
 async function deactivate(userId, tarjetaId) {
   const tarjeta = await prisma.tarjeta.findFirst({
     where: { id: tarjetaId, usuarioId: userId },
@@ -83,5 +112,6 @@ module.exports = {
   tarjetaSchema,
   listByUser,
   create,
+  update,
   deactivate,
 };

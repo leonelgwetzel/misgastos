@@ -1,0 +1,113 @@
+<% if (editing) { %>
+  <form method="post" action="/gastos/<%= editing.id %>/actualizar?page=<%= pagination.page %><%= filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '' %>">
+    <p class="hint">Podés corregir descripción y categoría sin regenerar cuotas.</p>
+    <label>
+      Descripción
+      <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required>
+      <% if (errors.descripcion) { %><small class="error-msg"><%= errors.descripcion %></small><% } %>
+    </label>
+    <label>
+      Categoría
+      <%- include('_app-select', {
+        name: 'categoriaId',
+        value: values.categoriaId || '',
+        options: [{ value: '', label: 'Sin categoría' }].concat(categorias.map(function(c) { return { value: c.id, label: c.nombre }; }))
+      }) %>
+    </label>
+    <div class="form-actions">
+      <button type="submit">Guardar cambios</button>
+      <a href="/gastos<%= filtro.q ? '?q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? (filtro.q ? '&' : '?') + 'page=' + pagination.page : '' %>" class="secondary outline btn-sm">Cancelar</a>
+    </div>
+  </form>
+<% } else { %>
+  <form method="post" action="/gastos" id="gasto-form">
+    <label>
+      Medio de pago
+      <%- include('_app-select', {
+        name: 'medioPago',
+        id: 'medioPago',
+        required: true,
+        value: values.medioPago || 'TARJETA',
+        options: [
+          { value: 'TARJETA', label: 'Tarjeta' },
+          { value: 'EFECTIVO', label: 'Efectivo' },
+          { value: 'DEBITO', label: 'Débito' }
+        ]
+      }) %>
+    </label>
+
+    <label>
+      Descripción
+      <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required placeholder="Ej. Supermercado" autofocus>
+      <% if (errors.descripcion) { %><small class="error-msg"><%= errors.descripcion %></small><% } %>
+    </label>
+    <label>
+      Monto
+      <input type="number" name="montoOriginal" step="0.01" min="0.01" value="<%= values.montoOriginal || '' %>" required>
+      <% if (errors.montoOriginal) { %><small class="error-msg"><%= errors.montoOriginal %></small><% } %>
+    </label>
+    <label>
+      Fecha de compra
+      <input type="date" name="fechaCompra" value="<%= values.fechaCompra || '' %>" required>
+    </label>
+    <label>
+      Categoría
+      <%- include('_app-select', {
+        name: 'categoriaId',
+        value: values.categoriaId || '',
+        options: [{ value: '', label: 'Sin categoría' }].concat(categorias.map(function(c) { return { value: c.id, label: c.nombre }; }))
+      }) %>
+    </label>
+
+    <div id="campos-tarjeta">
+      <% if (tarjetas.length === 0) { %>
+        <p class="hint"><a href="/tarjetas">Agregá una tarjeta</a> en Configuración para gastos con tarjeta.</p>
+      <% } else { %>
+        <label>
+          Tarjeta
+          <%- include('_app-select', {
+            name: 'tarjetaId',
+            value: values.tarjetaId || '',
+            options: tarjetas.filter(function(t) { return t.titularidad === 'PROPIA'; }).map(function(t) { return { value: t.id, label: t.alias + ' (' + t.divisa.codigo + ')' }; })
+          }) %>
+        </label>
+        <details class="form-advanced"<%= (values.cantidadCuotas && Number(values.cantidadCuotas) > 1) || values.mesImpactoPrimera ? ' open' : '' %>>
+          <summary>Cuotas y cuándo impacta</summary>
+          <label>
+            Cantidad de cuotas
+            <input type="number" name="cantidadCuotas" min="1" max="48" value="<%= values.cantidadCuotas || 1 %>">
+          </label>
+          <label>
+            Mes de impacto (1ª cuota)
+            <input type="month" name="mesImpactoPrimera" value="<%= values.mesImpactoPrimera || '' %>">
+          </label>
+          <p class="hint">Opcional. Vacío = vencimiento de la tarjeta.</p>
+          <% if (errors.mesImpactoPrimera) { %><small class="error-msg"><%= errors.mesImpactoPrimera %></small><% } %>
+        </details>
+      <% } %>
+    </div>
+
+    <div id="campos-efectivo" hidden>
+      <label>
+        Divisa
+        <%- include('_app-select', {
+          name: 'divisaId',
+          value: values.divisaId || (divisas[0] && divisas[0].id) || '',
+          options: divisas.map(function(d) { return { value: d.id, label: d.codigo }; })
+        }) %>
+      </label>
+      <label>
+        Cuenta (opcional)
+        <%- include('_app-select', {
+          name: 'cuentaId',
+          value: values.cuentaId || '',
+          options: [{ value: '', label: 'Sin cuenta' }].concat(cuentas.map(function(c) { return { value: c.id, label: c.nombre + ' (' + c.divisa.codigo + ')' }; }))
+        }) %>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit">Registrar gasto</button>
+    </div>
+  </form>
+<% } %>

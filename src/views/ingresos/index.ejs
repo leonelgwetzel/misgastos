@@ -1,0 +1,129 @@
+<div class="page-heading">
+  <h1>Ingresos</h1>
+  <button type="button" class="btn-nuevo" onclick="document.getElementById('capture-ingreso').showModal()">
+    <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+    <span>Nuevo</span>
+  </button>
+</div>
+
+<% if (success) { %>
+  <p class="success-msg toast-success" role="status">
+    <% if (success === 'creado') { %>Ingreso registrado.<% } %>
+    <% if (success === 'actualizado') { %>Ingreso actualizado.<% } %>
+    <% if (success === 'eliminado') { %>Ingreso eliminado.<% } %>
+  </p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<section class="data-page panel page-pane">
+  <div class="data-list-header dt-toolbar-row">
+    <div>
+      <h2>Todos los ingresos</h2>
+      <p class="hint data-list-count">
+        <% if (pagination.total === 0) { %>Sin resultados<% } else { %>
+          <%= pagination.total %> ingreso<%= pagination.total === 1 ? '' : 's' %>
+          <% if (filtro.q) { %> · filtro “<%= filtro.q %>”<% } %>
+        <% } %>
+      </p>
+    </div>
+    <form class="data-page-toolbar" method="get" action="/ingresos" role="search">
+      <input type="search" name="q" value="<%= filtro.q || '' %>" placeholder="Buscar…" aria-label="Buscar ingreso">
+      <button type="submit" class="secondary outline btn-sm">Buscar</button>
+      <% if (filtro.q) { %><a href="/ingresos" class="secondary outline btn-sm">Limpiar</a><% } %>
+    </form>
+  </div>
+
+  <% if (ingresos.length === 0) { %>
+    <div class="empty-state">
+      <i class="fa-solid fa-sack-dollar empty-ico" aria-hidden="true"></i>
+      <% if (filtro.q) { %>
+        <p>No hay ingresos que coincidan con “<%= filtro.q %>”.</p>
+      <% } else { %>
+        <p>Sin ingresos registrados.</p>
+        <p class="empty-actions">
+          <a href="#nuevo" onclick="document.getElementById('capture-ingreso').showModal(); return false;">Registrar el primero</a>
+        </p>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="table-wrap dt-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th>Fecha</th>
+            <th>Cuenta</th>
+            <th>Categoría</th>
+            <th class="col-num">Monto</th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% ingresos.forEach(function(i) { %>
+            <tr>
+              <td data-label="Descripción"><strong><%= i.descripcion || 'Ingreso' %></strong></td>
+              <td data-label="Fecha"><%= new Date(i.fecha).toLocaleDateString('es-AR') %></td>
+              <td data-label="Cuenta"><%= i.cuenta.nombre %></td>
+              <td data-label="Categoría"><%= i.categoria ? i.categoria.nombre : '—' %></td>
+              <td class="col-num amount positive" data-label="Monto">+<%= i.divisa.simbolo %> <%= Number(i.monto).toLocaleString('es-AR') %></td>
+              <td class="col-actions" data-label="Acciones">
+                <div class="dt-actions">
+                  <a href="/ingresos?edit=<%= i.id %><%= filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? '&page=' + pagination.page : '' %>#nuevo" class="secondary outline btn-sm">Editar</a>
+                  <% if (!i.gastoId) { %>
+                    <% const deleteQs = []; if (pagination.page > 1) deleteQs.push('page=' + pagination.page); if (filtro.q) deleteQs.push('q=' + encodeURIComponent(filtro.q)); %>
+                    <form method="post" action="/ingresos/<%= i.id %>/eliminar<%= deleteQs.length ? '?' + deleteQs.join('&') : '' %>"
+                          onsubmit="return confirm('¿Borrar este ingreso?')">
+                      <button type="submit" class="secondary outline btn-sm">Borrar</button>
+                    </form>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if (pagination.totalPages > 1) { %>
+      <nav class="data-list-pagination" aria-label="Paginación de ingresos">
+        <% if (pagination.prevUrl) { %>
+          <a href="<%= pagination.prevUrl %>" class="secondary outline btn-sm">‹ Anterior</a>
+        <% } else { %>
+          <span class="btn-sm pagination-disabled" aria-hidden="true">‹ Anterior</span>
+        <% } %>
+        <span class="pagination-info">Página <%= pagination.page %> de <%= pagination.totalPages %></span>
+        <% if (pagination.nextUrl) { %>
+          <a href="<%= pagination.nextUrl %>" class="secondary outline btn-sm">Siguiente ›</a>
+        <% } else { %>
+          <span class="btn-sm pagination-disabled" aria-hidden="true">Siguiente ›</span>
+        <% } %>
+      </nav>
+    <% } %>
+  <% } %>
+</section>
+
+<dialog class="capture-sheet" id="capture-ingreso">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2><%= editing ? 'Editar ingreso' : 'Nuevo ingreso' %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <%- include('../partials/form-ingreso') %>
+  </div>
+</dialog>
+
+<script>
+  (function () {
+    const dialog = document.getElementById('capture-ingreso');
+    const shouldOpen = location.hash === '#nuevo' || <%= editing ? 'true' : 'false' %> || <%= Object.keys(errors || {}).length ? 'true' : 'false' %>;
+    if (dialog && shouldOpen) dialog.showModal();
+    window.addEventListener('hashchange', function () {
+      if (location.hash === '#nuevo' && dialog) dialog.showModal();
+    });
+  })();
+</script>

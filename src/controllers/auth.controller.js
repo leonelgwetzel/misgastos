@@ -38,9 +38,10 @@ async function postLogin(req, res) {
 
 function renderRegister(req, res) {
   res.render('auth/register', {
-    title: 'Crear cuenta',
+    title: 'Solicitar acceso',
     errors: {},
     values: { nombre: '', email: '' },
+    requested: false,
   });
 }
 
@@ -52,31 +53,34 @@ async function postRegister(req, res) {
       errors[e.path[0]] = e.message;
     });
     return res.status(400).render('auth/register', {
-      title: 'Crear cuenta',
+      title: 'Solicitar acceso',
       errors,
       values: { nombre: req.body.nombre || '', email: req.body.email || '' },
+      requested: false,
     });
   }
 
   const { passwordConfirm, ...data } = parsed.data;
-  const result = await authService.register(data);
+  const result = await authService.register({
+    ...data,
+    perfil: 'cliente',
+    habilitado: false,
+  });
   if (result.error) {
     return res.status(400).render('auth/register', {
-      title: 'Crear cuenta',
+      title: 'Solicitar acceso',
       errors: { general: result.error },
       values: { nombre: data.nombre, email: data.email },
+      requested: false,
     });
   }
 
-  const loginResult = await authService.login({
-    email: data.email,
-    password: data.password,
+  return res.render('auth/register', {
+    title: 'Solicitar acceso',
+    errors: {},
+    values: { nombre: '', email: '' },
+    requested: true,
   });
-
-  req.session.userId = loginResult.usuario.id;
-  req.session.user = authService.toSessionUser(loginResult.usuario);
-
-  return res.redirect('/');
 }
 
 function postLogout(req, res) {

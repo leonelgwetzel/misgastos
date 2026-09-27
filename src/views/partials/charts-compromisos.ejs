@@ -1,0 +1,113 @@
+<div class="charts-compromisos-row">
+  <div class="charts-compromisos-col">
+    <div class="chart-card chart-card-compact">
+      <div class="chart-header">
+        <div class="chart-header-text">
+          <h3>Proyección tarjetas</h3>
+          <p class="chart-hint">3 meses desde <%= month.label %> · en divisa principal</p>
+        </div>
+        <% if (proyeccionTarjetas && proyeccionTarjetas.bars.length > 0) { %>
+          <button
+            type="button"
+            class="chart-expand-btn"
+            data-chart-dialog="chart-dialog-bars"
+            aria-label="Ampliar gráfico de barras">⤢</button>
+        <% } %>
+      </div>
+      <%- include('_chart-bars-body', {
+        proyeccion: proyeccionTarjetas,
+        chartSize: 'compact',
+        ariaLabel: 'Proyección de compromisos en tarjeta a 3 meses desde ' + month.label,
+      }) %>
+    </div>
+  </div>
+
+  <div class="charts-compromisos-col">
+    <div class="chart-card chart-card-compact chart-card-pie">
+      <div class="chart-header">
+        <div class="chart-header-text">
+          <h3>Por tarjeta</h3>
+          <p class="chart-hint"><%= month.label %> · en divisa principal</p>
+        </div>
+        <% if (vistaCompromisos && vistaCompromisos.porTarjeta && vistaCompromisos.porTarjeta.length > 0) { %>
+          <button
+            type="button"
+            class="chart-expand-btn"
+            data-chart-dialog="chart-dialog-pie"
+            aria-label="Ampliar gráfico de torta">⤢</button>
+        <% } %>
+      </div>
+      <%- include('_chart-pie-body', {
+        porTarjeta: vistaCompromisos && vistaCompromisos.porTarjeta,
+        showLegend: false,
+        ariaLabel: 'Distribución de compromisos por tarjeta en ' + month.label,
+      }) %>
+    </div>
+  </div>
+</div>
+
+<% if (proyeccionTarjetas12 && proyeccionTarjetas12.bars.length > 0) { %>
+  <dialog id="chart-dialog-bars" class="chart-modal">
+    <div class="chart-modal-inner">
+      <div class="chart-modal-header">
+        <div class="chart-header-text">
+          <h3>Proyección tarjetas</h3>
+          <p class="chart-hint">12 meses desde <%= month.label %> · en divisa principal</p>
+        </div>
+        <button type="button" class="chart-modal-close secondary outline btn-sm" aria-label="Cerrar">✕</button>
+      </div>
+      <%- include('_chart-bars-body', {
+        proyeccion: proyeccionTarjetas12,
+        chartSize: 'large',
+        ariaLabel: 'Proyección de compromisos en tarjeta a 12 meses desde ' + month.label,
+      }) %>
+    </div>
+  </dialog>
+<% } %>
+
+<% if (vistaCompromisos && vistaCompromisos.porTarjeta && vistaCompromisos.porTarjeta.length > 0) { %>
+  <dialog id="chart-dialog-pie" class="chart-modal">
+    <div class="chart-modal-inner">
+      <div class="chart-modal-header">
+        <div class="chart-header-text">
+          <h3>Por tarjeta</h3>
+          <p class="chart-hint"><%= month.label %> · en divisa principal</p>
+        </div>
+        <button type="button" class="chart-modal-close secondary outline btn-sm" aria-label="Cerrar">✕</button>
+      </div>
+      <%- include('_chart-pie-body', {
+        porTarjeta: vistaCompromisos.porTarjeta,
+        showLegend: true,
+        chartSize: 'large',
+        ariaLabel: 'Distribución de compromisos por tarjeta en ' + month.label,
+      }) %>
+    </div>
+  </dialog>
+<% } %>
+
+<script>
+  (function () {
+    if (window.__chartModalsInit) return;
+    window.__chartModalsInit = true;
+
+    document.addEventListener('click', function (e) {
+      const expandBtn = e.target.closest('[data-chart-dialog]');
+      if (expandBtn) {
+        const dialog = document.getElementById(expandBtn.dataset.chartDialog);
+        if (dialog && typeof dialog.showModal === 'function') dialog.showModal();
+        return;
+      }
+
+      const closeBtn = e.target.closest('.chart-modal-close');
+      if (closeBtn) {
+        const dialog = closeBtn.closest('dialog');
+        if (dialog) dialog.close();
+        return;
+      }
+
+      if (e.target.tagName === 'DIALOG' && e.target.classList.contains('chart-modal')) {
+        e.target.close();
+      }
+    });
+  })();
+</script>

@@ -1,26 +1,31 @@
 <div class="auth-page">
+  <%- include('../partials/_auth-fondo') %>
   <div class="auth-card">
-    <h1>Iniciar sesión</h1>
-    <p class="auth-subtitle">Tu biblia financiera personal</p>
+    <a class="auth-brand" href="/auth/login">
+      <img src="/img/logo-mark.png" width="36" height="36" alt="misgastos">
+    </a>
 
     <% if (errors.general) { %>
       <p class="error-msg" role="alert"><%= errors.general %></p>
     <% } %>
 
     <form method="post" action="/auth/login">
-      <label>
-        Email
+      <label class="auth-label">
+        <span><i class="fa-solid fa-envelope" aria-hidden="true"></i> Email</span>
         <input type="email" name="email" value="<%= values.email %>" required autocomplete="email">
         <% if (errors.email) { %><small class="error-msg"><%= errors.email %></small><% } %>
       </label>
-      <label>
-        Contraseña
+      <label class="auth-label">
+        <span><i class="fa-solid fa-lock" aria-hidden="true"></i> Contraseña</span>
         <input type="password" name="password" required autocomplete="current-password">
         <% if (errors.password) { %><small class="error-msg"><%= errors.password %></small><% } %>
       </label>
-      <button type="submit">Entrar</button>
+      <button type="submit" class="btn-accent auth-submit">
+        <i class="fa-solid fa-right-to-bracket" aria-hidden="true"></i>
+        Ingresar
+      </button>
     </form>
 
-    <p class="auth-footer">¿No tenés cuenta? <a href="/auth/register">Registrate</a></p>
+    <p class="auth-footer">¿No tenés cuenta? <a href="/auth/register">Solicitar acceso</a></p>
   </div>
 </div>

@@ -1,0 +1,60 @@
+<%
+  const opts = typeof options !== 'undefined' ? options : {};
+  const cats = opts.categorias || [];
+  const cuentas = opts.cuentas || [];
+  const tarjetas = opts.tarjetas || [];
+  const showTipo = !!opts.tipo;
+  const showPlan = !!opts.plan;
+%>
+<div class="month-filters">
+  <label class="month-filter-search">
+    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+    <input type="search" x-model="q" placeholder="Buscar…" autocomplete="off" aria-label="Buscar">
+  </label>
+  <% if (cats.length > 1) { %>
+    <%- include('_month-filter-select', {
+      model: 'cat',
+      ariaLabel: 'Categoría',
+      options: [{ value: '', label: 'Todas las categorías' }].concat(cats)
+    }) %>
+  <% } %>
+  <% if (cuentas.length > 1) { %>
+    <%- include('_month-filter-select', {
+      model: 'cuenta',
+      ariaLabel: 'Cuenta',
+      options: [{ value: '', label: 'Todas las cuentas' }].concat(cuentas)
+    }) %>
+  <% } %>
+  <% if (tarjetas.length > 1) { %>
+    <%- include('_month-filter-select', {
+      model: 'tarjeta',
+      ariaLabel: 'Tarjeta',
+      options: [{ value: '', label: 'Todas las tarjetas' }].concat(tarjetas)
+    }) %>
+  <% } %>
+  <% if (showTipo) { %>
+    <%- include('_month-filter-select', {
+      model: 'tipo',
+      ariaLabel: 'Tipo',
+      options: [
+        { value: '', label: 'Todos' },
+        { value: 'fijo', label: 'Fijos', icono: 'fa-repeat' },
+        { value: 'proyectado', label: 'Proyectados', icono: 'fa-clock' },
+        { value: 'normal', label: 'Otros', icono: 'fa-list' }
+      ]
+    }) %>
+  <% } %>
+  <% if (showPlan) { %>
+    <%- include('_month-filter-select', {
+      model: 'plan',
+      ariaLabel: 'Plan',
+      options: [
+        { value: '', label: 'Todos los planes' },
+        { value: 'curso', label: 'En curso', icono: 'fa-hourglass-half' },
+        { value: 'ultimas2', label: 'Últimas 2', icono: 'fa-flag' },
+        { value: 'ultima', label: 'Última cuota', icono: 'fa-flag-checkered' }
+      ]
+    }) %>
+  <% } %>
+</div>
+<p class="month-filter-empty" x-show="total === 0" x-cloak>Nada coincide con el filtro.</p>

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "bot": "node src/bot/index.js",
+    "bot:dev": "nodemon --config nodemon.bot.json",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
@@ -24,6 +26,7 @@
     "express": "^4.21.2",
     "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.18.1",
+    "grammy": "^1.46.0",
     "pg": "^8.16.0",
     "zod": "^3.25.67"
   },

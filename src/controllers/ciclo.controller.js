@@ -16,7 +16,6 @@ async function upsert(req, res) {
         ...req.query,
         year,
         month,
-        tab: 'compromisos',
       };
       return dashboardController.index(req, res);
     }
@@ -24,14 +23,13 @@ async function upsert(req, res) {
     const params = new URLSearchParams({
       year: monthKey.split('-')[0],
       month: monthKey.split('-')[1],
-      tab: 'compromisos',
     });
-    return res.redirect(`/?${params}`);
+    return res.redirect(`/?${params}#sec-cuotas`);
   } catch (err) {
     if (req.get('HX-Request')) {
       return res.status(400).send(err.message);
     }
-    return res.redirect(`/?tab=compromisos&error=${encodeURIComponent(err.message)}`);
+    return res.redirect(`/?error=${encodeURIComponent(err.message)}`);
   }
 }
 

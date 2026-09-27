@@ -1,0 +1,61 @@
+<% const slices = porTarjeta || []; %>
+<% if (slices.length > 0) { %>
+  <div
+    class="pie-chart-layout<%= showLegend ? ' pie-chart-layout-expanded' : ' pie-chart-layout-compact' %>"
+    role="img"
+    aria-label="<%= typeof ariaLabel !== 'undefined' ? ariaLabel : 'Distribución por categoría' %>">
+    <div class="donut-stage<%= typeof chartSize !== 'undefined' && chartSize === 'large' ? ' is-lg' : '' %>">
+      <svg
+        viewBox="0 0 140 140"
+        class="pie-chart-svg<%= typeof chartSize !== 'undefined' && chartSize === 'large' ? ' pie-chart-svg-lg' : '' %>"
+        aria-hidden="true">
+        <% slices.forEach(function(slice) { %>
+          <path
+            d="<%= slice.svgPath %>"
+            fill="<%= slice.color %>"
+            fill-rule="evenodd"
+            class="pie-slice">
+            <title><%= slice.alias %> · <%= slice.totalFormateado %> · <%= slice.pct %>%</title>
+          </path>
+        <% }); %>
+      </svg>
+      <div class="donut-center">
+        <span class="donut-center-label">Total</span>
+        <span class="donut-center-value amount"><%= porTarjeta.totalFormateado || slices[0].totalFormateado %></span>
+      </div>
+      <% slices.forEach(function(slice) { %>
+        <% if (slice.showCallout) { %>
+          <span
+            class="donut-callout"
+            style="left: <%= slice.calloutX %>%; top: <%= slice.calloutY %>%; background: <%= slice.color %>;"
+            title="<%= slice.alias %> · <%= slice.pct %>%">
+            <i class="fa-solid <%= slice.icon || 'fa-tag' %>" aria-hidden="true"></i>
+          </span>
+        <% } %>
+      <% }); %>
+    </div>
+    <% if (showLegend) { %>
+      <ul class="pie-legend">
+        <% slices.forEach(function(slice) { %>
+          <li class="pie-legend-item">
+            <span class="pie-legend-ico" style="background: <%= slice.color %>;">
+              <i class="fa-solid <%= slice.icon || 'fa-tag' %>" aria-hidden="true"></i>
+            </span>
+            <span class="pie-legend-label">
+              <span class="pie-legend-name"><%= slice.alias %></span>
+              <span class="pie-legend-bar" aria-hidden="true">
+                <span class="pie-legend-bar-fill" style="width: <%= Math.min(slice.pct, 100) %>%; background: <%= slice.color %>;"></span>
+              </span>
+              <span class="pie-legend-meta"><%= slice.totalFormateado %> · <%= slice.pct %>%</span>
+            </span>
+          </li>
+        <% }); %>
+      </ul>
+    <% } %>
+  </div>
+<% } else { %>
+  <div class="pie-chart-empty">
+    <i class="fa-solid fa-chart-pie pie-chart-empty-ico" aria-hidden="true"></i>
+    <p class="hint"><%= typeof emptyHint !== 'undefined' ? emptyHint : 'Sin datos para segmentar.' %></p>
+  </div>
+<% } %>

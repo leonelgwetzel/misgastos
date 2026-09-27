@@ -1,0 +1,23 @@
+# Las dependencias se instalan dentro de la imagen: copiar las del host pisa
+# el cliente de Prisma ya generado y rompe el build.
+node_modules
+npm-debug.log*
+
+# Secretos: nunca deben quedar dentro de la imagen.
+.env
+.env.local
+
+# Nada de esto se usa en runtime
+.git
+.gitignore
+.domain
+logs
+*.log
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.dev.yml
+README.md
+iniciar.bat
+.DS_Store
+Thumbs.db

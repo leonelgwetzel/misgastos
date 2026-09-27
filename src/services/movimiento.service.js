@@ -27,7 +27,7 @@ async function listByCuenta(userId, cuentaId, { limit = 50 } = {}) {
   });
 }
 
-async function createMovimiento(userId, cuentaId, rawData, { gastoId } = {}, tx = null) {
+async function createMovimiento(userId, cuentaId, rawData, { gastoId, ingresoFijoId, mesGenerado } = {}, tx = null) {
   const parsed = movimientoSchema.parse(rawData);
   const fecha = parseInputDate(parsed.fecha);
   if (!fecha) throw new Error('Fecha inválida');
@@ -55,6 +55,8 @@ async function createMovimiento(userId, cuentaId, rawData, { gastoId } = {}, tx 
         descripcion: parsed.descripcion || null,
         categoriaId: parsed.categoriaId || null,
         gastoId: gastoId || null,
+        ingresoFijoId: ingresoFijoId || null,
+        mesGenerado: mesGenerado || null,
       },
       include: { divisa: true, categoria: true },
     });

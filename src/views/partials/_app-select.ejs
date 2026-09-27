@@ -1,0 +1,50 @@
+<%
+  var choices = (options || []).map(function (opt) {
+    if (typeof opt === 'string') return { value: opt, label: opt, icono: '' };
+    return { value: opt.value, label: opt.label, icono: opt.icono || '' };
+  });
+  var isBound = typeof model !== 'undefined' && model;
+  var isCompact = typeof compact !== 'undefined' && compact;
+  var current = typeof value !== 'undefined' && value != null ? String(value) : '';
+  var selectId = typeof id !== 'undefined' && id ? id : '';
+  var selectName = typeof name !== 'undefined' && name ? name : '';
+  var isRequired = typeof required !== 'undefined' && required;
+  var label = typeof ariaLabel !== 'undefined' ? ariaLabel : '';
+  var bindExpr = isBound ? model : 'val';
+%>
+<div
+  class="app-select<%= isCompact ? ' is-compact' : '' %>"
+  x-data="{ open: false<%= isBound ? '' : ', val: ' + JSON.stringify(current) %> }"
+  <% if (!isBound) { %>
+  x-init="(() => { const form = $el.closest('form'); if (!form) return; form.addEventListener('reset', () => { open = false; queueMicrotask(() => { val = <%= JSON.stringify(current) %>; }); }); })()"
+  <% } %>
+  @click.outside="open = false">
+  <select
+    class="app-select-ctrl<%= isCompact ? ' is-compact' : '' %>"
+    x-ref="sel"
+    <% if (selectName) { %>name="<%= selectName %>"<% } %>
+    <% if (selectId) { %>id="<%= selectId %>"<% } %>
+    <% if (isRequired) { %>required<% } %>
+    <% if (label) { %>aria-label="<%= label %>"<% } %>
+    x-model="<%= bindExpr %>"
+    @mousedown.prevent="open = !open"
+    @keydown.space.prevent="open = !open"
+    @keydown.enter.prevent="open = !open"
+    @keydown.arrow-down.prevent="open = true">
+    <% choices.forEach(function (opt) { %>
+      <option value="<%= opt.value %>"<%= !isBound && current === String(opt.value) ? ' selected' : '' %>><%= opt.label %></option>
+    <% }); %>
+  </select>
+  <div class="reg-menu app-select-menu" x-show="open" x-cloak>
+    <% choices.forEach(function (opt) { %>
+      <button
+        type="button"
+        class="app-select-opt"
+        :class="{ 'is-active': <%= bindExpr %> === <%= JSON.stringify(String(opt.value)) %> }"
+        @click="<%= bindExpr %> = <%= JSON.stringify(String(opt.value)) %>; open = false; $nextTick(() => $refs.sel.dispatchEvent(new Event('change', { bubbles: true })))">
+        <% if (opt.icono) { %><i class="fa-solid <%= opt.icono %>" aria-hidden="true"></i><% } %>
+        <%= opt.label %>
+      </button>
+    <% }); %>
+  </div>
+</div>

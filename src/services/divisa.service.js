@@ -13,16 +13,66 @@ const tarifaSchema = z.object({
   tasa: z.coerce.number().positive('La tasa debe ser positiva'),
 });
 
-async function listByUser(userId) {
-  return prisma.divisa.findMany({
+async function syncHistorialTarifas(userId) {
+  const actuales = await prisma.tarifaCambioDefault.findMany({
     where: { usuarioId: userId },
-    orderBy: { codigo: 'asc' },
-    include: {
-      tarifasDefault: {
-        where: { usuarioId: userId },
-      },
-    },
   });
+  if (actuales.length === 0) return;
+
+  const previos = await prisma.historialTarifaCambio.findMany({
+    where: { usuarioId: userId },
+    orderBy: { createdAt: 'desc' },
+  });
+  const ultimaPorDivisa = new Map();
+  previos.forEach((h) => {
+    if (!ultimaPorDivisa.has(h.divisaId)) ultimaPorDivisa.set(h.divisaId, h);
+  });
+
+  const faltantes = actuales.filter((t) => {
+    const last = ultimaPorDivisa.get(t.divisaId);
+    return !last || Number(last.tasa) !== Number(t.tasa);
+  });
+
+  if (faltantes.length === 0) return;
+
+  await prisma.historialTarifaCambio.createMany({
+    data: faltantes.map((t) => ({
+      usuarioId: userId,
+      divisaId: t.divisaId,
+      tasa: t.tasa,
+      createdAt: t.updatedAt,
+    })),
+  });
+}
+
+async function listByUser(userId) {
+  await syncHistorialTarifas(userId);
+
+  const [divisas, historial] = await Promise.all([
+    prisma.divisa.findMany({
+      where: { usuarioId: userId },
+      orderBy: { codigo: 'asc' },
+      include: {
+        tarifasDefault: {
+          where: { usuarioId: userId },
+        },
+      },
+    }),
+    prisma.historialTarifaCambio.findMany({
+      where: { usuarioId: userId },
+      orderBy: { createdAt: 'desc' },
+    }),
+  ]);
+
+  const logsPorDivisa = historial.reduce((acc, row) => {
+    (acc[row.divisaId] || (acc[row.divisaId] = [])).push(row);
+    return acc;
+  }, {});
+
+  return divisas.map((d) => ({
+    ...d,
+    historialTarifas: logsPorDivisa[d.id] || [],
+  }));
 }
 
 async function getTasaForDivisa(userId, divisaId) {
@@ -92,7 +142,7 @@ async function upsertTarifa(userId, rawData) {
   });
   if (!divisa) throw new Error('Divisa no encontrada');
 
-  return prisma.tarifaCambioDefault.upsert({
+  const tarifa = await prisma.tarifaCambioDefault.upsert({
     where: {
       usuarioId_divisaId: { usuarioId: userId, divisaId: parsed.divisaId },
     },
@@ -105,6 +155,16 @@ async function upsertTarifa(userId, rawData) {
       tasa: parsed.tasa,
     },
   });
+
+  await prisma.historialTarifaCambio.create({
+    data: {
+      usuarioId: userId,
+      divisaId: parsed.divisaId,
+      tasa: parsed.tasa,
+    },
+  });
+
+  return tarifa;
 }
 
 module.exports = {

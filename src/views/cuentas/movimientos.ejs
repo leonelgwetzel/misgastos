@@ -1,4 +1,8 @@
-<h1><%= cuenta.nombre %></h1>
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · <a href="/cuentas">Cuentas</a> · <%= cuenta.nombre %></p>
+<div class="page-heading">
+  <h1><%= cuenta.nombre %></h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-mov', listHref: '/cuentas/' + cuenta.id + '/movimientos', btnLabel: 'Nuevo' }) %>
+</div>
 <p class="hint">Saldo actual: <strong><%= cuenta.divisa.simbolo %> <%= Number(cuenta.saldoActual).toLocaleString('es-AR') %></strong></p>
 
 <% if (success) { %>
@@ -7,79 +11,113 @@
     <% if (success === 'ajuste') { %>Saldo ajustado.<% } %>
   </p>
 <% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
+<% } %>
 <% if (errors.general) { %>
   <p class="error-msg" role="alert"><%= errors.general %></p>
 <% } %>
 
-<section class="two-col">
-  <article class="panel">
-    <h2>Registrar movimiento</h2>
-    <form method="post" action="/cuentas/<%= cuenta.id %>/movimientos">
-      <label>
-        Tipo
-        <select name="tipo" required>
-          <option value="INGRESO" <%= values.tipo === 'INGRESO' ? 'selected' : '' %>>Ingreso</option>
-          <option value="EGRESO" <%= values.tipo === 'EGRESO' ? 'selected' : '' %>>Egreso</option>
-        </select>
-      </label>
-      <label>
-        Monto
-        <input type="number" name="monto" step="0.01" min="0.01" value="<%= values.monto || '' %>" required>
-        <% if (errors.monto) { %><small class="error-msg"><%= errors.monto %></small><% } %>
-      </label>
-      <label>
-        Fecha
-        <input type="date" name="fecha" value="<%= values.fecha || '' %>" required>
-      </label>
-      <label>
-        Descripción
-        <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" placeholder="Opcional">
-      </label>
-      <label>
-        Categoría
-        <select name="categoriaId">
-          <option value="">Sin categoría</option>
-          <% categorias.forEach(function(c) { %>
-            <option value="<%= c.id %>" <%= values.categoriaId === c.id ? 'selected' : '' %>><%= c.nombre %></option>
-          <% }); %>
-        </select>
-      </label>
-      <button type="submit">Registrar</button>
-    </form>
-
-    <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
-
-    <h2>Ajustar saldo</h2>
-    <form method="post" action="/cuentas/<%= cuenta.id %>/ajustar">
-      <label>
-        Saldo real en cuenta
-        <input type="number" name="saldoReal" step="0.01" value="<%= Number(cuenta.saldoActual) %>" required>
-      </label>
-      <button type="submit" class="secondary outline">Ajustar</button>
-    </form>
-  </article>
-
-  <article class="panel">
-    <h2>Historial</h2>
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de movimientos</h2>
     <% if (movimientos.length === 0) { %>
-      <p class="hint">Sin movimientos todavía.</p>
+      <p class="hint">Sin movimientos todavía. <a href="#form" onclick="document.getElementById('capture-mov').showModal(); return false;">Registrá el primero</a>.</p>
     <% } else { %>
-      <ul class="expense-list">
-        <% movimientos.forEach(function(m) { %>
-          <li>
-            <span class="expense-meta">
-              <span class="expense-name"><%= m.descripcion || m.tipo.toLowerCase() %></span>
-              <span class="expense-tag"><%= new Date(m.fecha).toLocaleDateString('es-AR') %> · <%= m.tipo.toLowerCase() %></span>
-            </span>
-            <span class="expense-amount <%= m.tipo === 'INGRESO' ? 'amount positive' : m.tipo === 'EGRESO' ? 'amount negative' : '' %>">
-              <%= m.tipo === 'EGRESO' ? '−' : m.tipo === 'INGRESO' ? '+' : '±' %>
-              <%= m.divisa.simbolo %> <%= Number(m.monto).toLocaleString('es-AR') %>
-            </span>
-          </li>
-        <% }); %>
-      </ul>
+      <div class="table-wrap dt-wrap">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th class="col-num">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% movimientos.forEach(function(m) { %>
+              <tr>
+                <td data-label="Descripción"><%= m.descripcion || m.tipo.toLowerCase() %></td>
+                <td data-label="Fecha"><%= new Date(m.fecha).toLocaleDateString('es-AR') %></td>
+                <td data-label="Tipo"><%= m.tipo.toLowerCase() %></td>
+                <td class="col-num <%= m.tipo === 'INGRESO' ? 'amount positive' : m.tipo === 'EGRESO' ? 'amount negative' : '' %>" data-label="Monto">
+                  <%= m.tipo === 'EGRESO' ? '−' : m.tipo === 'INGRESO' ? '+' : '±' %>
+                  <%= m.divisa.simbolo %> <%= Number(m.monto).toLocaleString('es-AR') %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
     <% } %>
   </article>
 </section>
 
-<a href="/cuentas" class="page-back">← Cuentas</a>
+<dialog class="capture-sheet" id="capture-mov">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2>Nuevo movimiento</h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="/cuentas/<%= cuenta.id %>/movimientos">
+      <div class="cfg-form-fields">
+        <label>
+          Tipo
+          <%- include('../partials/_app-select', {
+            name: 'tipo',
+            required: true,
+            value: values.tipo || 'INGRESO',
+            options: [
+              { value: 'INGRESO', label: 'Ingreso' },
+              { value: 'EGRESO', label: 'Egreso' }
+            ]
+          }) %>
+        </label>
+        <label>
+          Monto
+          <input type="number" name="monto" step="0.01" min="0.01" value="<%= values.monto || '' %>" required>
+          <% if (errors.monto) { %><small class="error-msg"><%= errors.monto %></small><% } %>
+        </label>
+        <label>
+          Fecha
+          <input type="date" name="fecha" value="<%= values.fecha || '' %>" required>
+        </label>
+        <label>
+          Descripción
+          <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" placeholder="Opcional">
+        </label>
+        <label>
+          Categoría
+          <%- include('../partials/_app-select', {
+            name: 'categoriaId',
+            value: values.categoriaId || '',
+            options: [{ value: '', label: 'Sin categoría' }].concat(categorias.map(function(c) { return { value: c.id, label: c.nombre }; }))
+          }) %>
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Registrar" aria-label="Registrar">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <button type="reset" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+          <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+
+    <form class="cat-form cfg-ajuste-form" method="post" action="/cuentas/<%= cuenta.id %>/ajustar">
+      <div class="cfg-form-fields">
+        <label>
+          Saldo real en cuenta
+          <input type="number" name="saldoReal" step="0.01" value="<%= Number(cuenta.saldoActual) %>" required>
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Ajustar saldo" aria-label="Ajustar saldo">
+          <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+<%- include('../partials/_capture-boot', { dialogId: 'capture-mov', open: Boolean(errors && (errors.general || errors.monto)) || Boolean(typeof error !== 'undefined' && error) }) %>

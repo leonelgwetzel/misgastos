@@ -1,4 +1,8 @@
-<h1>Divisas</h1>
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · Divisas</p>
+<div class="page-heading">
+  <h1>Divisas</h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-divisa', listHref: '/divisas' }) %>
+</div>
 
 <% if (success) { %>
   <p class="success-msg" role="status">
@@ -10,56 +14,113 @@
   <p class="error-msg" role="alert"><%= errors.general %></p>
 <% } %>
 
-<% if (divisaPrincipal) { %>
-  <p class="hint">Divisa principal: <strong><%= divisaPrincipal.codigo %></strong> (no editable en MVP)</p>
-<% } %>
-
-<section class="two-col">
-  <article class="panel">
-    <h2>Agregar divisa</h2>
-    <form method="post" action="/divisas">
-      <label>
-        Código
-        <input type="text" name="codigo" value="<%= values.codigo || '' %>" required placeholder="EUR" maxlength="6">
-        <% if (errors.codigo) { %><small class="error-msg"><%= errors.codigo %></small><% } %>
-      </label>
-      <label>
-        Símbolo
-        <input type="text" name="simbolo" value="<%= values.simbolo || '' %>" required placeholder="€">
-      </label>
-      <label>
-        Nombre
-        <input type="text" name="nombre" value="<%= values.nombre || '' %>" required placeholder="Euro">
-      </label>
-      <button type="submit">Agregar</button>
-    </form>
-  </article>
-
-  <article class="panel">
-    <h2>Mis divisas</h2>
-    <ul class="card-list">
-      <% divisas.forEach(function(d) { %>
-        <li>
-          <span class="item-title"><%= d.codigo %> — <%= d.nombre %></span>
-          <span class="hint"><%= d.simbolo %></span>
-          <% if (divisaPrincipal && d.id !== divisaPrincipal.id) { %>
-            <form method="post" action="/divisas/tarifas" style="margin-top: 0.75rem;">
-              <input type="hidden" name="divisaId" value="<%= d.id %>">
-              <label>
-                Tasa → <%= divisaPrincipal.codigo %>
-                <input type="number" name="tasa" step="0.000001" min="0.000001"
-                  value="<%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa) : '' %>"
-                  placeholder="Ej. 1200" required>
-              </label>
-              <button type="submit" class="secondary outline btn-sm">Guardar tarifa</button>
-            </form>
-          <% } else if (divisaPrincipal && d.id === divisaPrincipal.id) { %>
-            <span class="hint">Principal</span>
-          <% } %>
-        </li>
-      <% }); %>
-    </ul>
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de divisas</h2>
+    <div class="table-wrap dt-wrap">
+      <table class="dt">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Símbolo</th>
+            <th>Tarifa → principal</th>
+            <th class="col-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% divisas.forEach(function(d) { %>
+            <tr>
+              <td data-label="Código"><strong><%= d.codigo %></strong></td>
+              <td data-label="Nombre"><%= d.nombre %></td>
+              <td data-label="Símbolo"><%= d.simbolo %></td>
+              <td data-label="Tarifa">
+                <% if (divisaPrincipal && d.id === divisaPrincipal.id) { %>
+                  <span class="hint">Principal</span>
+                <% } else if (divisaPrincipal) { %>
+                  <%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa).toLocaleString('es-AR') : '—' %>
+                <% } else { %>—<% } %>
+              </td>
+              <td class="col-actions" data-label="Acciones">
+                <div class="dt-actions">
+                  <% if (divisaPrincipal && d.id !== divisaPrincipal.id) { %>
+                    <button type="button" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial" onclick="document.getElementById('logs-divisa-<%= d.id %>').showModal()">
+                      <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    </button>
+                    <form method="post" action="/divisas/tarifas" class="dt-inline-form">
+                      <input type="hidden" name="divisaId" value="<%= d.id %>">
+                      <input type="number" name="tasa" step="0.000001" min="0.000001"
+                        value="<%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa) : '' %>"
+                        placeholder="Tasa" required aria-label="Tasa">
+                      <button type="submit" class="dt-ico-btn is-edit" title="Guardar tarifa" aria-label="Guardar tarifa">
+                        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                  <% } else { %>
+                    <span class="muted-dash">—</span>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
   </article>
 </section>
 
-<a href="/" class="page-back">← Inicio</a>
+<dialog class="capture-sheet" id="capture-divisa">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2>Nueva divisa</h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="/divisas">
+      <div class="cfg-form-fields">
+        <% if (divisaPrincipal) { %>
+          <p class="hint">Divisa principal: <strong><%= divisaPrincipal.codigo %></strong> (no editable en MVP)</p>
+        <% } %>
+        <label>
+          Código
+          <input type="text" name="codigo" value="<%= values.codigo || '' %>" required placeholder="EUR" maxlength="6">
+          <% if (errors.codigo) { %><small class="error-msg"><%= errors.codigo %></small><% } %>
+        </label>
+        <label>
+          Símbolo
+          <input type="text" name="simbolo" value="<%= values.simbolo || '' %>" required placeholder="€">
+        </label>
+        <label>
+          Nombre
+          <input type="text" name="nombre" value="<%= values.nombre || '' %>" required placeholder="Euro">
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Agregar divisa" aria-label="Agregar divisa">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <button type="reset" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+          <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+<% divisas.forEach(function(d) { %>
+  <% if (divisaPrincipal && d.id !== divisaPrincipal.id) { %>
+    <%- include('../partials/_cfg-logs-sheet', {
+      dialogId: 'logs-divisa-' + d.id,
+      title: 'Historial de ' + d.codigo,
+      logGroups: [{
+        heading: 'Tarifa → principal',
+        columns: ['Tasa', 'Registrado'],
+        rows: (d.historialTarifas || []).map(function(h) {
+          return [
+            Number(h.tasa).toLocaleString('es-AR', { maximumFractionDigits: 6 }),
+            new Date(h.createdAt).toLocaleString('es-AR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          ];
+        })
+      }]
+    }) %>
+  <% } %>
+<% }); %>
+<%- include('../partials/_capture-boot', { dialogId: 'capture-divisa', open: Boolean(errors && Object.keys(errors).length > 0) }) %>

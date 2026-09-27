@@ -8,6 +8,7 @@ router.use(requireAuth);
 
 router.get('/', cuentaController.list);
 router.post('/', cuentaController.create);
+router.post('/:id/actualizar', cuentaController.update);
 router.get('/:id/movimientos', cuentaController.movimientos);
 router.post('/:id/movimientos', cuentaController.createMovimiento);
 router.post('/:id/ajustar', cuentaController.ajustar);

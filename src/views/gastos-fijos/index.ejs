@@ -1,4 +1,8 @@
-<h1>Gastos fijos</h1>
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · Gastos fijos</p>
+<div class="page-heading">
+  <h1>Gastos fijos</h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-fijo', listHref: '/gastos-fijos' }) %>
+</div>
 
 <% if (success) { %>
   <p class="success-msg" role="status">
@@ -8,112 +12,225 @@
     <% if (success === 'desactivado') { %>Gasto fijo desactivado.<% } %>
   </p>
 <% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
+<% } %>
 <% if (errors.general) { %>
   <p class="error-msg" role="alert"><%= errors.general %></p>
 <% } %>
 
-<section class="two-col">
-  <article class="panel">
-    <h2>Nuevo gasto fijo</h2>
-    <form method="post" action="/gastos-fijos">
-      <label>
-        Descripción
-        <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required placeholder="Ej. Alquiler">
-      </label>
-      <label>
-        Monto mensual
-        <input type="number" name="monto" step="0.01" min="0.01" value="<%= values.monto || '' %>" required>
-      </label>
-      <label>
-        Divisa
-        <select name="divisaId" required>
-          <% divisas.forEach(function(d) { %>
-            <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %></option>
-          <% }); %>
-        </select>
-      </label>
-      <label>
-        Medio de pago
-        <select name="medioPago" id="fijo-medio" required>
-          <option value="TARJETA">Tarjeta</option>
-          <option value="EFECTIVO">Efectivo</option>
-          <option value="DEBITO">Débito</option>
-        </select>
-      </label>
-      <label id="fijo-tarjeta-label">
-        Tarjeta
-        <select name="tarjetaId">
-          <option value="">—</option>
-          <% tarjetas.forEach(function(t) { %>
-            <option value="<%= t.id %>"><%= t.alias %></option>
-          <% }); %>
-        </select>
-      </label>
-      <label id="fijo-cuenta-label" hidden>
-        Cuenta
-        <select name="cuentaId">
-          <option value="">—</option>
-          <% cuentas.forEach(function(c) { %>
-            <option value="<%= c.id %>"><%= c.nombre %></option>
-          <% }); %>
-        </select>
-      </label>
-      <div class="grid-2">
-        <label>
-          Día del mes
-          <input type="number" name="diaDelMes" min="1" max="28" value="<%= values.diaDelMes || 1 %>">
-        </label>
-        <label>
-          Vigente desde
-          <input type="date" name="vigenteDesde" value="<%= values.vigenteDesde || '' %>" required>
-        </label>
-      </div>
-      <button type="submit">Crear gasto fijo</button>
-    </form>
-  </article>
-
-  <article class="panel">
-    <h2>Plantillas activas</h2>
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de gastos fijos</h2>
     <% if (gastosFijos.length === 0) { %>
-      <p class="hint">Sin gastos fijos. Ej: alquiler, gym, streaming.</p>
+      <p class="hint">Sin gastos fijos. Ej: alquiler, gym, streaming. <a href="#form" onclick="document.getElementById('capture-fijo').showModal(); return false;">Creá el primero</a>.</p>
     <% } else { %>
-      <ul class="card-list">
-        <% gastosFijos.filter(f => f.activo).forEach(function(f) { %>
-          <li>
-            <span class="item-title"><%= f.descripcion %></span>
-            <span class="hint">
-              <%= f.divisa.simbolo %> <%= f.historial[0] ? Number(f.historial[0].monto).toLocaleString('es-AR') : '—' %>
-              · <%= f.medioPago.toLowerCase() %>
-              · día <%= f.diaDelMes %>
-            </span>
-            <form method="post" action="/gastos-fijos/<%= f.id %>/historial" style="margin-top: 0.75rem;">
-              <div class="grid-2">
-                <label>
-                  Nuevo monto desde
-                  <input type="date" name="vigenteDesde" required>
-                </label>
-                <label>
-                  Monto
-                  <input type="number" name="monto" step="0.01" min="0.01" required>
-                </label>
-              </div>
-              <button type="submit" class="secondary outline btn-sm">Actualizar monto</button>
-            </form>
-            <form method="post" action="/gastos-fijos/<%= f.id %>/eliminar" style="margin-top: 0.5rem;" onsubmit="return confirm('¿Desactivar?')">
-              <button type="submit" class="secondary outline btn-sm">Desactivar</button>
-            </form>
-          </li>
-        <% }); %>
-      </ul>
+      <div class="table-wrap dt-wrap">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th>Descripción</th>
+              <th class="col-num">Monto</th>
+              <th>Medio</th>
+              <th>Día</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% gastosFijos.filter(f => f.activo).forEach(function(f) { %>
+              <tr>
+                <td data-label="Descripción"><strong><%= f.descripcion %></strong></td>
+                <td class="col-num" data-label="Monto"><%= f.divisa.simbolo %> <%= f.historial[0] ? Number(f.historial[0].monto).toLocaleString('es-AR') : '—' %></td>
+                <td data-label="Medio"><%= f.medioPago.toLowerCase() %></td>
+                <td data-label="Día"><%= f.diaDelMes %></td>
+                <td class="col-actions" data-label="Acciones">
+                  <div class="dt-actions">
+                    <button type="button" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial" onclick="document.getElementById('logs-fijo-<%= f.id %>').showModal()">
+                      <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="dt-ico-btn is-more" title="Gestionar" aria-label="Gestionar" onclick="document.getElementById('capture-fijo-<%= f.id %>').showModal()">
+                      <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                    </button>
+                    <form method="post" action="/gastos-fijos/<%= f.id %>/eliminar" onsubmit="return confirm('¿Desactivar?')">
+                      <button type="submit" class="dt-ico-btn is-del" title="Desactivar" aria-label="Desactivar">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
     <% } %>
   </article>
 </section>
 
+<dialog class="capture-sheet" id="capture-fijo">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2>Nuevo gasto fijo</h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="/gastos-fijos">
+      <div class="cfg-form-fields">
+        <label>
+          Descripción
+          <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" required placeholder="Ej. Alquiler">
+        </label>
+        <label>
+          Monto mensual
+          <input type="number" name="monto" step="0.01" min="0.01" value="<%= values.monto || '' %>" required>
+        </label>
+        <label>
+          Divisa
+          <%- include('../partials/_app-select', {
+            name: 'divisaId',
+            required: true,
+            value: values.divisaId || (divisas[0] && divisas[0].id) || '',
+            options: divisas.map(function(d) { return { value: d.id, label: d.codigo }; })
+          }) %>
+        </label>
+        <label>
+          Medio de pago
+          <%- include('../partials/_app-select', {
+            name: 'medioPago',
+            id: 'fijo-medio',
+            required: true,
+            value: values.medioPago || 'TARJETA',
+            options: [
+              { value: 'TARJETA', label: 'Tarjeta' },
+              { value: 'EFECTIVO', label: 'Efectivo' },
+              { value: 'DEBITO', label: 'Débito' }
+            ]
+          }) %>
+        </label>
+        <label id="fijo-tarjeta-label">
+          Tarjeta
+          <%- include('../partials/_app-select', {
+            name: 'tarjetaId',
+            value: values.tarjetaId || '',
+            options: [{ value: '', label: '—' }].concat(tarjetas.map(function(t) { return { value: t.id, label: t.alias }; }))
+          }) %>
+        </label>
+        <label id="fijo-cuenta-label" hidden>
+          Cuenta
+          <%- include('../partials/_app-select', {
+            name: 'cuentaId',
+            value: values.cuentaId || '',
+            options: [{ value: '', label: '—' }].concat(cuentas.map(function(c) { return { value: c.id, label: c.nombre }; }))
+          }) %>
+        </label>
+        <div class="grid-2">
+          <label>
+            Día del mes
+            <input type="number" name="diaDelMes" min="1" max="28" value="<%= values.diaDelMes || 1 %>">
+          </label>
+          <label>
+            Vigente desde
+            <input type="date" name="vigenteDesde" value="<%= values.vigenteDesde || '' %>" required>
+          </label>
+        </div>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Crear gasto fijo" aria-label="Crear gasto fijo">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <button type="reset" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+          <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<% gastosFijos.filter(f => f.activo).forEach(function(f) { %>
+<dialog class="capture-sheet" id="capture-fijo-<%= f.id %>">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2>Gestionar <%= f.descripcion %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="/gastos-fijos/<%= f.id %>/historial">
+      <h3 class="cfg-log-group-title">Nuevo monto</h3>
+      <div class="cfg-form-fields">
+        <label>
+          Vigente desde
+          <input type="date" name="vigenteDesde" required>
+        </label>
+        <label>
+          Monto
+          <input type="number" name="monto" step="0.01" min="0.01" required>
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Actualizar monto" aria-label="Actualizar monto">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+    <form class="cat-form cfg-ajuste-form" method="post" action="/gastos-fijos/<%= f.id %>/override">
+      <input type="hidden" name="monthKey" value="<%= mesActual %>">
+      <h3 class="cfg-log-group-title">Solo <%= mesActual %></h3>
+      <div class="cfg-form-fields">
+        <label class="checkbox-row">
+          <input type="checkbox" name="omitido" value="true">
+          <span>Omitir este mes</span>
+        </label>
+        <label>
+          Monto distinto (opcional)
+          <input type="number" name="montoOverride" step="0.01" min="0.01" placeholder="Vacío = habitual">
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="Aplicar al mes" aria-label="Aplicar al mes">
+          <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+<% }); %>
+
+<% gastosFijos.filter(f => f.activo).forEach(function(f) { %>
+  <%- include('../partials/_cfg-logs-sheet', {
+    dialogId: 'logs-fijo-' + f.id,
+    title: 'Historial de ' + f.descripcion,
+    logGroups: [
+      {
+        heading: 'Montos',
+        columns: ['Vigente desde', 'Monto', 'Registrado'],
+        rows: (f.historial || []).map(function(h) {
+          return [
+            new Date(h.vigenteDesde).toLocaleDateString('es-AR'),
+            (h.divisa ? h.divisa.simbolo : f.divisa.simbolo) + ' ' + Number(h.monto).toLocaleString('es-AR'),
+            new Date(h.createdAt).toLocaleDateString('es-AR')
+          ];
+        })
+      },
+      {
+        heading: 'Ajustes de un mes',
+        columns: ['Mes', 'Cambio'],
+        rows: (f.overrides || []).map(function(o) {
+          var mes = new Date(o.mesReferencia).toLocaleDateString('es-AR', { month: 'short', year: 'numeric' });
+          var cambio = o.omitido
+            ? 'Omitido'
+            : (o.montoOverride != null ? 'Monto ' + f.divisa.simbolo + ' ' + Number(o.montoOverride).toLocaleString('es-AR') : '—');
+          return [mes, cambio];
+        })
+      }
+    ]
+  }) %>
+<% }); %>
+
+<%- include('../partials/_capture-boot', { dialogId: 'capture-fijo', open: Boolean(errors && Object.keys(errors).length > 0) }) %>
 <script>
   (function () {
     const medio = document.getElementById('fijo-medio');
     const tarjeta = document.getElementById('fijo-tarjeta-label');
     const cuenta = document.getElementById('fijo-cuenta-label');
+    if (!medio) return;
     function toggle() {
       const esTarjeta = medio.value === 'TARJETA';
       tarjeta.hidden = !esTarjeta;
@@ -123,5 +240,3 @@
     toggle();
   })();
 </script>
-
-<a href="/" class="page-back">← Inicio</a>

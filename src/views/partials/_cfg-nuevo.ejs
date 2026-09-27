@@ -1,0 +1,16 @@
+<%
+  var label = typeof btnLabel !== 'undefined' ? btnLabel : 'Nuevo';
+  var base = typeof listHref !== 'undefined' ? listHref : '#';
+  var isEditing = typeof editing !== 'undefined' && editing;
+%>
+<% if (isEditing) { %>
+  <a href="<%= base %>#form" class="btn-nuevo">
+    <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+    <span><%= label %></span>
+  </a>
+<% } else { %>
+  <button type="button" class="btn-nuevo" onclick="document.getElementById('<%= dialogId %>').showModal()">
+    <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+    <span><%= label %></span>
+  </button>
+<% } %>

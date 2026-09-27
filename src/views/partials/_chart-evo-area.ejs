@@ -1,0 +1,72 @@
+<%
+  const puntos = (typeof serie !== 'undefined' && serie) ? serie : [];
+  const compacto = typeof compact !== 'undefined' && compact;
+  const W = 400;
+  const H = compacto ? 140 : 200;
+  const padX = 40;
+  const padTop = 16;
+  const padBottom = 28;
+  const chartW = W - padX * 2;
+  const chartH = H - padTop - padBottom;
+  const maxG = puntos.length
+    ? Math.max(...puntos.map((p) => Number(p.gastos) || 0), 1)
+    : 1;
+
+  const coords = puntos.map((p, i) => {
+    const x = padX + (puntos.length <= 1 ? chartW / 2 : (i / (puntos.length - 1)) * chartW);
+    const y = padTop + chartH - ((Number(p.gastos) || 0) / maxG) * chartH;
+    return Object.assign({}, p, { x, y });
+  });
+
+  const linePath = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+  const areaPath = coords.length
+    ? linePath
+      + ' L' + coords[coords.length - 1].x.toFixed(1) + ',' + (padTop + chartH).toFixed(1)
+      + ' L' + coords[0].x.toFixed(1) + ',' + (padTop + chartH).toFixed(1)
+      + ' Z'
+    : '';
+%>
+<% if (coords.length >= 2) { %>
+  <div class="evo-chart<%= compacto ? ' is-compact' : '' %>" role="img" aria-label="<%= typeof ariaLabel !== 'undefined' ? ariaLabel : 'Evolución de gastos' %>">
+    <svg class="evo-chart-svg" viewBox="0 0 <%= W %> <%= H %>" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <linearGradient id="evo-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="currentColor" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="currentColor" stop-opacity="0.02"/>
+        </linearGradient>
+      </defs>
+      <% for (let g = 0; g <= 2; g++) {
+        const gy = padTop + (chartH / 2) * g;
+      %>
+        <line class="evo-grid-line" x1="<%= padX %>" y1="<%= gy %>" x2="<%= W - padX %>" y2="<%= gy %>"/>
+      <% } %>
+      <path class="evo-area" d="<%= areaPath %>" fill="url(#evo-fill)"/>
+      <path class="evo-line" d="<%= linePath %>" fill="none"/>
+      <% coords.forEach(function(c) { %>
+        <g class="evo-point<%= c.actual ? ' is-actual' : '' %>">
+          <circle cx="<%= c.x.toFixed(1) %>" cy="<%= c.y.toFixed(1) %>" r="<%= c.actual ? 5 : 3.5 %>"/>
+          <% if (c.actual) { %>
+            <text class="evo-point-value" x="<%= c.x.toFixed(1) %>" y="<%= (c.y - 10).toFixed(1) %>" text-anchor="middle"><%= c.formateado %></text>
+          <% } %>
+          <text class="evo-point-label" x="<%= c.x.toFixed(1) %>" y="<%= H - 6 %>" text-anchor="middle">
+            <%= c.label %><% if (c.deltaPctFormateado) { %><tspan class="evo-point-delta<%= c.mejor ? ' is-ok' : ' is-alert' %>"> (<%= c.deltaPctFormateado %>)</tspan><% } %>
+          </text>
+        </g>
+      <% }); %>
+    </svg>
+    <ul class="evo-legend">
+      <% coords.forEach(function(c) { %>
+        <li class="evo-legend-item<%= c.actual ? ' is-actual' : '' %>">
+          <span class="evo-legend-label">
+            <%= c.label %><% if (c.deltaPctFormateado) { %>
+              <span class="evo-legend-delta<%= c.mejor ? ' is-ok' : ' is-alert' %>"><%= c.deltaPctFormateado %></span>
+            <% } %>
+          </span>
+          <span class="evo-legend-value amount"><%= c.formateado %></span>
+        </li>
+      <% }); %>
+    </ul>
+  </div>
+<% } else { %>
+  <p class="hint">Sin datos suficientes para graficar la evolución.</p>
+<% } %>

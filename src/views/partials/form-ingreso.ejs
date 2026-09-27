@@ -1,0 +1,44 @@
+<% if (cuentas.length === 0) { %>
+  <p class="hint"><a href="/cuentas">Creá una cuenta</a> en Configuración para registrar ingresos.</p>
+<% } else { %>
+  <form method="post" action="<%= editing ? '/ingresos/' + editing.id + '/actualizar?page=' + pagination.page + (filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '') : '/ingresos' %>">
+    <label>
+      Cuenta
+      <%- include('_app-select', {
+        name: 'cuentaId',
+        required: true,
+        value: values.cuentaId || (cuentas[0] && cuentas[0].id) || '',
+        options: cuentas.map(function(c) { return { value: c.id, label: c.nombre + ' (' + c.divisa.codigo + ')' }; })
+      }) %>
+      <% if (errors.cuentaId) { %><small class="error-msg"><%= errors.cuentaId %></small><% } %>
+    </label>
+    <label>
+      Monto
+      <input type="number" name="monto" step="0.01" min="0.01" value="<%= values.monto || '' %>" required<%= !editing ? ' autofocus' : '' %>>
+      <% if (errors.monto) { %><small class="error-msg"><%= errors.monto %></small><% } %>
+    </label>
+    <label>
+      Fecha
+      <input type="date" name="fecha" value="<%= values.fecha || '' %>" required>
+    </label>
+    <label>
+      Descripción
+      <input type="text" name="descripcion" value="<%= values.descripcion || '' %>" placeholder="Ej. Sueldo, freelance">
+      <% if (errors.descripcion) { %><small class="error-msg"><%= errors.descripcion %></small><% } %>
+    </label>
+    <label>
+      Categoría
+      <%- include('_app-select', {
+        name: 'categoriaId',
+        value: values.categoriaId || '',
+        options: [{ value: '', label: 'Sin categoría' }].concat(categorias.map(function(c) { return { value: c.id, label: c.nombre }; }))
+      }) %>
+    </label>
+    <div class="form-actions">
+      <button type="submit"><%= editing ? 'Guardar cambios' : 'Registrar ingreso' %></button>
+      <% if (editing) { %>
+        <a href="/ingresos<%= filtro.q ? '?q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? (filtro.q ? '&' : '?') + 'page=' + pagination.page : '' %>" class="secondary outline btn-sm">Cancelar</a>
+      <% } %>
+    </div>
+  </form>
+<% } %>

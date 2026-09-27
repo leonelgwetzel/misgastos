@@ -1,0 +1,144 @@
+<%
+  const movItems = items || [];
+  const extras = (typeof filasExtra !== 'undefined' && filasExtra) ? filasExtra : [];
+  const esIngreso = tipo === 'ingreso';
+  const signo = esIngreso ? '+' : '−';
+  const tono = esIngreso ? 'positive' : '';
+  const hayAlgo = movItems.length > 0 || extras.length > 0;
+%>
+<section class="mv-card mv-section month-pane" id="<%= id %>">
+  <div class="mv-section-head">
+    <h4 class="mv-section-title">
+      <i class="fa-solid <%= icono %>" aria-hidden="true"></i> <%= titulo %>
+    </h4>
+    <% if (hayAlgo) { %>
+      <span class="mv-section-total">
+        <span class="mv-section-total-label">Total</span>
+        <span class="mv-section-total-value amount <%= tono %>"><%= totalFormateado %></span>
+      </span>
+    <% } %>
+  </div>
+
+  <% if (typeof nota !== 'undefined' && nota) { %>
+    <p class="mv-section-note"><%= nota %></p>
+  <% } %>
+
+  <% if (movItems.length > 0) { %>
+    <%
+      const catsFiltro = [...new Set(movItems.map(function(i) { return i.categoria; }).filter(Boolean))].sort();
+      const cuentasFiltro = [...new Set(movItems.map(function(i) { return i.cuenta; }).filter(Boolean))].sort();
+    %>
+    <div class="month-table" x-data="monthTable()">
+    <%- include('_month-filters', { options: { categorias: catsFiltro, cuentas: cuentasFiltro, tipo: true } }) %>
+    <div class="table-wrap table-wrap-flush" x-show="total > 0">
+      <table class="dt dt-mov">
+        <thead>
+          <tr>
+            <th class="col-fecha"><i class="fa-solid fa-calendar" aria-hidden="true"></i> Fecha</th>
+            <th><i class="fa-solid fa-align-left" aria-hidden="true"></i> Descripción</th>
+            <th><i class="fa-solid fa-tag" aria-hidden="true"></i> Categoría</th>
+            <th><i class="fa-solid fa-building-columns" aria-hidden="true"></i> Cuenta</th>
+            <th class="col-num"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> Monto</th>
+          </tr>
+        </thead>
+        <tbody x-ref="body">
+          <% movItems.forEach(function(item) { %>
+            <%
+              const tipoFila = item.proyectado ? 'proyectado' : (item.esFijo ? 'fijo' : 'normal');
+              const qFila = [item.descripcion, item.categoria, item.cuenta].filter(Boolean).join(' ').toLowerCase();
+            %>
+            <tr<%= item.proyectado ? ' class="is-proyectado"' : '' %>
+              data-row
+              data-q="<%= qFila %>"
+              data-cat="<%= item.categoria || '' %>"
+              data-cuenta="<%= item.cuenta || '' %>"
+              data-tipo="<%= tipoFila %>"
+              x-show="rowVisible($el)"
+              x-cloak>
+              <td class="col-fecha" data-label="Fecha">
+                <span class="mov-fecha"><%= item.fecha ? new Date(item.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }) : '-' %></span>
+              </td>
+              <td class="col-desc" data-label="Descripción">
+                <span class="mov-desc"><% if (item.href) { %><a href="<%= item.href %>"><%= item.descripcion %></a><% } else { %><%= item.descripcion %><% } %></span>
+                <% if (item.esFijo || item.proyectado) { %>
+                  <span class="badge-row">
+                    <% if (item.esFijo) { %>
+                      <%- include('_badge', { texto: 'Fijo', variante: 'fijo', icono: 'fa-repeat' }) %>
+                    <% } %>
+                    <% if (item.proyectado) { %>
+                      <%- include('_badge', { texto: 'Proyectado', variante: 'proyectado', icono: 'fa-clock' }) %>
+                    <% } %>
+                  </span>
+                <% } %>
+              </td>
+              <td class="col-cat" data-label="Categoría">
+                <%- include('_chip-categoria', {
+                  nombre: item.categoria,
+                  color: item.categoriaColor,
+                  icono: item.categoriaIcono
+                }) %>
+              </td>
+              <td class="col-cuenta" data-label="Cuenta"><%= item.cuenta %></td>
+              <td class="col-num col-monto" data-label="Monto">
+                <span class="amount <%= tono %>"><%= signo %><%= item.simbolo %> <%= item.monto.toLocaleString('es-AR') %></span>
+                <span class="mov-bar" aria-hidden="true">
+                  <span class="mov-bar-fill<%= tono ? ' is-' + tono : '' %>" style="width: <%= Math.max(item.pctDelMayor || 0, 2) %>%;"></span>
+                </span>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+        <tfoot>
+          <% extras.forEach(function(extra) { %>
+            <tr class="dt-subtotal">
+              <td colspan="4" data-label="Subtotal">
+                <% if (extra.icono) { %><i class="fa-solid <%= extra.icono %>" aria-hidden="true"></i> <% } %>
+                <% if (extra.href) { %>
+                  <a href="<%= extra.href %>"><%= extra.label %></a>
+                <% } else { %>
+                  <%= extra.label %>
+                <% } %>
+              </td>
+              <td class="col-num" data-label="Monto"><%= extra.formateado %></td>
+            </tr>
+          <% }); %>
+          <tr class="dt-total">
+            <td colspan="4" data-label="Total"><strong><%= titulo %> del mes</strong></td>
+            <td class="col-num" data-label="Monto"><strong class="amount <%= tono %>"><%= totalFormateado %></strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    </div>
+  <% } else { %>
+    <div class="empty-state empty-state-inline">
+      <i class="fa-solid <%= icono %> empty-ico" aria-hidden="true"></i>
+      <p><%= emptyText %></p>
+      <% if (typeof emptyHref !== 'undefined' && emptyHref) { %>
+        <p class="empty-actions"><a href="<%= emptyHref %>"><%= emptyLinkText %></a></p>
+      <% } %>
+    </div>
+
+    <% if (extras.length > 0) { %>
+      <ul class="mv-extras">
+        <% extras.forEach(function(extra) { %>
+          <li class="mv-extra-item">
+            <span class="mv-extra-label">
+              <% if (extra.icono) { %><i class="fa-solid <%= extra.icono %>" aria-hidden="true"></i><% } %>
+              <% if (extra.href) { %>
+                <a href="<%= extra.href %>"><%= extra.label %></a>
+              <% } else { %>
+                <%= extra.label %>
+              <% } %>
+            </span>
+            <span class="mv-extra-value amount"><%= extra.formateado %></span>
+          </li>
+        <% }); %>
+        <li class="mv-extra-item is-total">
+          <span class="mv-extra-label"><strong><%= titulo %> del mes</strong></span>
+          <span class="mv-extra-value amount <%= tono %>"><strong><%= totalFormateado %></strong></span>
+        </li>
+      </ul>
+    <% } %>
+  <% } %>
+</section>

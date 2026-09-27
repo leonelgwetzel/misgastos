@@ -5,6 +5,8 @@ const {
   monthKeyFromDate,
   parseInputDate,
   utcDate,
+  utcToday,
+  daysInMonth,
 } = require('../lib/dates');
 const divisaService = require('./divisa.service');
 const gastoService = require('./gasto.service');
@@ -30,8 +32,12 @@ const historialSchema = z.object({
 
 const overrideSchema = z.object({
   monthKey: z.string().min(1),
-  omitido: z.coerce.boolean().optional(),
-  montoOverride: z.coerce.number().positive().optional(),
+  omitido: z.union([z.boolean(), z.string(), z.undefined()]).optional()
+    .transform((v) => v === true || v === 'true' || v === 'on'),
+  montoOverride: z.preprocess(
+    (v) => (v === '' || v == null ? undefined : v),
+    z.coerce.number().positive().optional(),
+  ),
 });
 
 async function listByUser(userId) {
@@ -41,7 +47,8 @@ async function listByUser(userId) {
       divisa: true,
       tarjeta: true,
       cuenta: true,
-      historial: { orderBy: { vigenteDesde: 'desc' }, take: 1 },
+      historial: { orderBy: { vigenteDesde: 'desc' }, include: { divisa: true } },
+      overrides: { orderBy: { mesReferencia: 'desc' } },
     },
     orderBy: { descripcion: 'asc' },
   });
@@ -163,6 +170,10 @@ async function generateGastoFromFijo(userId, fijo, monthKey, historial, override
   const day = Math.min(fijo.diaDelMes, lastDay);
   const fechaCompra = utcDate(year, month, day);
 
+  if (fijo.medioPago !== 'TARJETA' && fechaCompra > utcToday()) {
+    return null;
+  }
+
   const { tasaConversion, montoPrincipal } = await divisaService.resolveMontoPrincipal(
     userId,
     fijo.divisaId,
@@ -221,6 +232,68 @@ async function generateForMonth(userId, monthKey) {
   }
 }
 
+async function previewPendingCashForMonth(userId, monthKey) {
+  const mesRef = dateFromMonthKey(monthKey);
+  const today = utcToday();
+  const [year, month] = monthKey.split('-').map(Number);
+
+  const fijos = await prisma.gastoFijo.findMany({
+    where: {
+      usuarioId: userId,
+      activo: true,
+      medioPago: { in: ['EFECTIVO', 'DEBITO'] },
+    },
+    include: {
+      historial: { orderBy: { vigenteDesde: 'asc' } },
+      overrides: { where: { mesReferencia: mesRef } },
+      cuenta: true,
+      divisa: true,
+      tipoGasto: true,
+    },
+  });
+
+  const items = [];
+  for (const fijo of fijos) {
+    if (fijo.vigenteDesde > mesRef) continue;
+    const override = fijo.overrides[0] || null;
+    if (override?.omitido) continue;
+
+    const existing = await prisma.gasto.findFirst({
+      where: { gastoFijoId: fijo.id, mesGenerado: mesRef },
+    });
+    if (existing) continue;
+
+    const day = Math.min(fijo.diaDelMes, daysInMonth(year, month));
+    const fecha = utcDate(year, month, day);
+    if (!(fecha > today)) continue;
+
+    const monto = override?.montoOverride != null
+      ? Number(override.montoOverride)
+      : resolveMontoFromHistorial(fijo.historial, mesRef);
+    if (!monto) continue;
+
+    const { montoPrincipal } = await divisaService.resolveMontoPrincipal(
+      userId,
+      fijo.divisaId,
+      monto,
+    );
+
+    items.push({
+      id: `preview-gf-${fijo.id}`,
+      descripcion: fijo.descripcion,
+      cuenta: fijo.cuenta?.nombre || 'Sin cuenta',
+      monto,
+      montoPrincipal,
+      simbolo: fijo.divisa.simbolo,
+      fecha,
+      esFijo: true,
+      proyectado: true,
+      categoria: fijo.tipoGasto?.nombre || 'Sin categoría',
+    });
+  }
+  return items;
+}
+
 async function deactivate(userId, gastoFijoId) {
   const fijo = await prisma.gastoFijo.findFirst({
     where: { id: gastoFijoId, usuarioId: userId },
@@ -242,6 +315,7 @@ module.exports = {
   addHistorial,
   setMesOverride,
   generateForMonth,
+  previewPendingCashForMonth,
   deactivate,
   resolveMontoFromHistorial,
 };

@@ -1,148 +1,429 @@
-<% if (tab === 'plata') { %>
-  <section class="tab-panel" role="tabpanel">
-    <% if (vistaPlata && vistaPlata.mensaje) { %>
-      <p class="info-msg"><%= vistaPlata.mensaje %> <a href="/cuentas">Crear cuenta</a></p>
-    <% } %>
-    <div class="summary-cards">
-      <article>
-        <header>Ingresos</header>
-        <p class="amount positive"><%= vistaPlata.totalIngresosFormateado %></p>
-      </article>
-      <article>
-        <header>Egresos</header>
-        <p class="amount negative"><%= vistaPlata.totalEgresosFormateado %></p>
-      </article>
-      <article>
-        <header>Resultado</header>
-        <p class="amount"><%= vistaPlata.resultadoFormateado %></p>
-      </article>
-    </div>
+<section class="tab-panel" role="region" aria-label="Vista del mes">
+  <% if (vistaPlata && vistaPlata.mensaje) { %>
+    <p class="info-msg"><%= vistaPlata.mensaje %> <a href="/configuracion">Ir a configuración</a> · <a href="/cuentas">Crear cuenta</a></p>
+  <% } %>
 
-    <% if (vistaPlata.ingresos.length > 0) { %>
-      <h4>Ingresos</h4>
-      <ul class="expense-list">
-        <% vistaPlata.ingresos.forEach(function(i) { %>
-          <li>
-            <span class="expense-meta">
-              <span class="expense-name"><%= i.descripcion %></span>
-              <span class="expense-tag"><%= i.cuenta %> · <%= new Date(i.fecha).toLocaleDateString('es-AR') %></span>
-            </span>
-            <span class="expense-amount amount positive">+<%= i.simbolo %> <%= i.monto.toLocaleString('es-AR') %></span>
-          </li>
-        <% }); %>
-      </ul>
-    <% } %>
+  <% const culminados = (vistaCompromisos && vistaCompromisos.culminados) || { count: 0, totalFormateado: '—', items: [] }; %>
+  <% if (vistaPlata && !vistaPlata.mensaje) { %>
+    <% const pieTodos = (vistaPlata.categoriasPie && vistaPlata.categoriasPie.todos) || []; %>
+    <% const pieFijos = (vistaPlata.categoriasPie && vistaPlata.categoriasPie.fijos) || []; %>
+    <% const pieTarjeta = (vistaPlata.categoriasPie && vistaPlata.categoriasPie.tarjeta) || []; %>
+    <% const pieVariables = (vistaPlata.categoriasPie && vistaPlata.categoriasPie.variables) || []; %>
+    <% const cmp = vistaPlata.comparacion || null; %>
 
-    <% if (vistaPlata.egresos.length > 0) { %>
-      <h4>Egresos</h4>
-      <ul class="expense-list">
-        <% vistaPlata.egresos.forEach(function(e) { %>
-          <li>
-            <span class="expense-meta">
-              <span class="expense-name"><%= e.descripcion %></span>
-              <span class="expense-tag"><%= e.cuenta %><% if (e.esFijo) { %> · fijo<% } %> · <%= new Date(e.fecha).toLocaleDateString('es-AR') %></span>
-            </span>
-            <span class="expense-amount amount negative">−<%= e.simbolo %> <%= e.monto.toLocaleString('es-AR') %></span>
-          </li>
-        <% }); %>
-      </ul>
-    <% } %>
+    <%
+      const evoSerie = (cmp && cmp.serie && cmp.serie.length)
+        ? cmp.serie
+        : (cmp && cmp.previo && cmp.siguiente ? [
+            {
+              key: 'previo',
+              label: (cmp.previo.label || 'Previo').split(' ')[0].slice(0, 3),
+              labelLargo: cmp.previo.label || 'Mes previo',
+              gastos: Number(cmp.previo.gastos) || 0,
+              formateado: cmp.previo.gastosFormateado || '—',
+            },
+            {
+              key: 'actual',
+              label: month.label.split(' ')[0].slice(0, 3),
+              labelLargo: month.label,
+              gastos: Number(vistaPlata.totalEgresosConTarjetas) || 0,
+              formateado: vistaPlata.totalEgresosConTarjetasFormateado,
+              actual: true,
+            },
+            {
+              key: 'siguiente',
+              label: (cmp.siguiente.label || 'Sig.').split(' ')[0].slice(0, 3),
+              labelLargo: cmp.siguiente.label || 'Mes siguiente',
+              gastos: Number(cmp.siguiente.gastos) || 0,
+              formateado: cmp.siguiente.gastosFormateado || '—',
+            },
+          ] : []);
+      if (cmp && evoSerie.length) {
+        evoSerie.forEach(function(p) {
+          const row = p.key === 'previo' ? cmp.previo : (p.key === 'siguiente' ? cmp.siguiente : null);
+          if (!row) return;
+          const txt = row.deltaPctFormateado && row.deltaPctFormateado !== '—'
+            ? row.deltaPctFormateado
+            : null;
+          p.deltaPctFormateado = txt;
+          p.mejor = row.mejor;
+        });
+      }
+    %>
 
-    <% if (!vistaPlata.mensaje && vistaPlata.ingresos.length === 0 && vistaPlata.egresos.length === 0) { %>
-      <div class="empty-state">
-        <p>Sin movimientos este mes</p>
-        <p><a href="/cuentas">Registrar ingreso o egreso</a></p>
+    <section class="mv-card mv-section month-pane" id="sec-comparacion">
+      <div class="mv-section-head">
+        <h4 class="mv-section-title"><i class="fa-solid fa-chart-line" aria-hidden="true"></i> Comparación meses</h4>
       </div>
-    <% } %>
+      <p class="mv-section-note">Gastos del mes previo, el actual y el próximo.</p>
+      <%- include('_chart-evo-area', {
+        serie: evoSerie,
+        ariaLabel: 'Comparación de gastos: mes previo, actual y siguiente'
+      }) %>
+    </section>
 
-    <p class="total-line">
-      <strong>Saldo cuentas al cierre</strong>
-      <span><%= vistaPlata.saldoCuentasFormateado %></span>
+    <section class="mv-card mv-section month-pane" id="sec-categorias" x-data="{ filtro: 'todos' }">
+      <div class="mv-section-head">
+        <h4 class="mv-section-title"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i> Por categoría</h4>
+      </div>
+      <div class="pie-filters" role="tablist" aria-label="Filtrar gastos del gráfico">
+        <button type="button" role="tab" class="pie-filter-btn"
+          :aria-selected="filtro === 'todos'" :class="{ 'is-active': filtro === 'todos' }"
+          @click="filtro = 'todos'">Todos</button>
+        <button type="button" role="tab" class="pie-filter-btn"
+          :aria-selected="filtro === 'fijos'" :class="{ 'is-active': filtro === 'fijos' }"
+          @click="filtro = 'fijos'">Fijos</button>
+        <button type="button" role="tab" class="pie-filter-btn"
+          :aria-selected="filtro === 'tarjeta'" :class="{ 'is-active': filtro === 'tarjeta' }"
+          @click="filtro = 'tarjeta'">Tarjeta</button>
+        <button type="button" role="tab" class="pie-filter-btn"
+          :aria-selected="filtro === 'variables'" :class="{ 'is-active': filtro === 'variables' }"
+          @click="filtro = 'variables'">Otros</button>
+      </div>
+      <div class="cat-filter-pane" x-show="filtro === 'todos'">
+        <%- include('_chart-candles-body', { datos: pieTodos, ariaLabel: 'Gastos por categoría' }) %>
+      </div>
+      <div class="cat-filter-pane" x-show="filtro === 'fijos'" x-cloak>
+        <%- include('_chart-candles-body', { datos: pieFijos, ariaLabel: 'Gastos fijos', emptyHint: 'Sin gastos fijos este mes.' }) %>
+      </div>
+      <div class="cat-filter-pane" x-show="filtro === 'tarjeta'" x-cloak>
+        <%- include('_chart-candles-body', { datos: pieTarjeta, ariaLabel: 'Gastos de tarjeta', emptyHint: 'Sin gastos de tarjeta este mes.' }) %>
+      </div>
+      <div class="cat-filter-pane" x-show="filtro === 'variables'" x-cloak>
+        <%- include('_chart-candles-body', { datos: pieVariables, ariaLabel: 'Otros gastos', emptyHint: 'Sin gastos variables este mes.' }) %>
+      </div>
+    </section>
+
+    <section class="mv-card mv-section month-pane" id="sec-compromisos">
+      <div class="mv-section-head">
+        <h4 class="mv-section-title"><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Compromisos de tarjeta</h4>
+        <span class="mv-section-total">
+          <span class="mv-section-total-label">
+            Total · <%= vistaCompromisos && vistaCompromisos.divisaPrincipal ? vistaCompromisos.divisaPrincipal.codigo : 'ARS' %>
+          </span>
+          <span class="mv-section-total-value amount negative"><%= vistaCompromisos && vistaCompromisos.totalFormateado ? vistaCompromisos.totalFormateado : '—' %></span>
+        </span>
+      </div>
+      <p class="mv-section-note">Cuotas del mes más lo pendiente de facturar.</p>
+
+      <% if (vistaCompromisos && vistaCompromisos.porTarjeta && vistaCompromisos.porTarjeta.length > 0) { %>
+        <%
+          const cmpMaxMonto = Math.max.apply(null, vistaCompromisos.porTarjeta.map(function(t) {
+            return Number(t.total) || 0;
+          }).concat([1]));
+          const cmpVelas = vistaCompromisos.porTarjeta.map(function(t) {
+            const monto = Number(t.total) || 0;
+            return {
+              alias: t.alias,
+              color: t.color,
+              icono: 'fa-credit-card',
+              total: monto,
+              totalFormateado: t.totalFormateado,
+              pct: Math.round((Number(t.pct) || 0) * 10) / 10,
+              pctDelMayor: Math.round((monto / cmpMaxMonto) * 1000) / 10,
+            };
+          });
+          cmpVelas.totalFormateado = vistaCompromisos.totalFormateado;
+        %>
+        <%- include('_chart-candles-body', {
+          datos: cmpVelas,
+          hideHead: true,
+          countLabel: 'tarjeta',
+          ariaLabel: 'Compromisos por tarjeta',
+          emptyHint: 'Sin compromisos este mes.',
+        }) %>
+      <% } %>
+
+      <% if (vistaCompromisos && vistaCompromisos.mensaje) { %>
+        <p class="info-msg"><%= vistaCompromisos.mensaje %></p>
+      <% } %>
+    </section>
+  <% } %>
+
+  <%- include('_tabla-movimientos', {
+    items: vistaPlata.ingresos,
+    tipo: 'ingreso',
+    id: 'sec-ingresos',
+    titulo: 'Ingresos',
+    icono: 'fa-arrow-trend-up',
+    totalFormateado: vistaPlata.totalIngresosFormateado,
+    emptyText: 'Sin ingresos registrados este mes.',
+    emptyHref: '/ingresos#nuevo',
+    emptyLinkText: 'Registrar un ingreso'
+  }) %>
+
+  <%
+    const egresosItems = (vistaPlata.egresos || []).slice();
+    const pagoTarjetasNum = Number(vistaPlata.pagoTarjetas) || 0;
+    if (pagoTarjetasNum > 0) {
+      const montosEgresos = egresosItems.map(function(e) { return Number(e.monto) || 0; });
+      montosEgresos.push(pagoTarjetasNum);
+      const maxEgreso = Math.max.apply(null, montosEgresos.concat([1]));
+      egresosItems.push({
+        descripcion: 'Tarjetas',
+        fecha: null,
+        categoria: 'Tarjeta',
+        categoriaColor: '#8b5cf6',
+        categoriaIcono: 'fa-credit-card',
+        cuenta: '—',
+        monto: pagoTarjetasNum,
+        simbolo: (egresosItems[0] && egresosItems[0].simbolo) || '$',
+        pctDelMayor: Math.round((pagoTarjetasNum / maxEgreso) * 1000) / 10,
+        href: '#sec-cuotas'
+      });
+    }
+  %>
+  <%- include('_tabla-movimientos', {
+    items: egresosItems,
+    tipo: 'egreso',
+    id: 'sec-egresos',
+    titulo: 'Egresos',
+    icono: 'fa-arrow-trend-down',
+    totalFormateado: vistaPlata.totalEgresosConTarjetasFormateado,
+    nota: 'Incluye efectivo, débito y los compromisos de tarjeta del mes.',
+    emptyText: 'Sin egresos este mes.',
+    emptyHref: '/gastos#nuevo',
+    emptyLinkText: 'Registrar un gasto'
+  }) %>
+
+  <section class="mv-card mv-section month-pane" id="sec-pendiente">
+    <div class="mv-section-head">
+      <h4 class="mv-section-title">
+        <i class="fa-solid fa-clock" aria-hidden="true"></i> Pendientes de impacto
+      </h4>
+      <% if (vistaCompromisos && vistaCompromisos.cuotaCero.length > 0) { %>
+        <%- include('_badge', { texto: 'Todavía no impacta', variante: 'proyectado', icono: 'fa-hourglass-half' }) %>
+      <% } %>
+    </div>
+    <p class="mv-section-note">
+      Compras hechas después del cierre de tarjeta: caen en el resumen del mes que viene.
     </p>
-  </section>
-<% } else { %>
-  <section class="tab-panel" role="tabpanel">
-    <%- include('chart-tarjetas-12m') %>
-
-    <% if (vistaCompromisos && vistaCompromisos.mensaje) { %>
-      <p class="info-msg"><%= vistaCompromisos.mensaje %></p>
-    <% } %>
-
-    <% if (vistaCompromisos && vistaCompromisos.tarjetas.length > 0) { %>
-      <details class="ciclos-details">
-        <summary>Ajustar ciclos de tarjeta</summary>
-        <div class="ciclos-body">
-          <% vistaCompromisos.tarjetas.forEach(function(t) { %>
-            <form class="ciclo-form"
-                  method="post"
-                  action="/ciclos"
-                  hx-post="/ciclos"
-                  hx-target="#tab-content"
-                  hx-swap="innerHTML">
-              <input type="hidden" name="tarjetaId" value="<%= t.id %>">
-              <input type="hidden" name="monthKey" value="<%= month.key %>">
-              <fieldset>
-                <legend><%= t.alias %> · <%= t.divisa %></legend>
-                <div class="grid-2">
-                  <label>
-                    Fecha cierre
-                    <input type="date" name="fechaCierre" value="<%= t.cicloForm.fechaCierre %>" required>
-                  </label>
-                  <label>
-                    Mes vencimiento
-                    <input type="month" name="mesVencimiento" value="<%= t.cicloForm.mesVencimiento %>" required>
-                  </label>
-                </div>
-                <button type="submit" class="secondary outline btn-sm">Guardar</button>
-              </fieldset>
-            </form>
-          <% }); %>
-        </div>
-      </details>
-    <% } %>
 
     <% if (vistaCompromisos && vistaCompromisos.cuotaCero.length > 0) { %>
-      <h4>Pendiente de facturar</h4>
-      <ul class="expense-list">
-        <% vistaCompromisos.cuotaCero.forEach(function(c) { %>
-          <li>
-            <span class="expense-meta">
-              <span class="expense-name"><%= c.descripcion %></span>
-              <span class="expense-tag"><%= c.etiqueta %></span>
-            </span>
-            <span class="expense-amount"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR') %></span>
-          </li>
-        <% }); %>
-      </ul>
-    <% } %>
-
-    <% if (vistaCompromisos && vistaCompromisos.cuotas.length > 0) { %>
-      <h4>Cuotas del mes</h4>
-      <ul class="expense-list">
-        <% vistaCompromisos.cuotas.forEach(function(c) { %>
-          <li>
-            <span class="expense-meta">
-              <span class="expense-name"><%= c.descripcion %></span>
-              <span class="expense-tag"><%= c.tarjeta %> · <%= c.etiqueta %></span>
-            </span>
-            <span class="expense-amount"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR') %></span>
-          </li>
-        <% }); %>
-      </ul>
-    <% } %>
-
-    <% if (vistaCompromisos && vistaCompromisos.cuotaCero.length === 0 && vistaCompromisos.cuotas.length === 0 && !vistaCompromisos.mensaje) { %>
-      <div class="empty-state">
-        <p>Sin compromisos este mes</p>
-        <p><a href="/gastos">Registrar un gasto</a></p>
+      <%
+        const tarjetasPend = [...new Set(vistaCompromisos.cuotaCero.map(function(c) { return c.tarjeta; }).filter(Boolean))].sort();
+      %>
+      <div class="month-table" x-data="monthTable()">
+      <%- include('_month-filters', { options: { tarjetas: tarjetasPend } }) %>
+      <div class="table-wrap table-wrap-flush" x-show="total > 0">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th><i class="fa-solid fa-align-left" aria-hidden="true"></i> Descripción</th>
+              <th><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Tarjeta</th>
+              <th class="col-num"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> Monto</th>
+              <th class="col-num"><i class="fa-solid fa-coins" aria-hidden="true"></i> En <%= vistaCompromisos.divisaPrincipal ? vistaCompromisos.divisaPrincipal.codigo : 'ARS' %></th>
+            </tr>
+          </thead>
+          <tbody x-ref="body">
+            <% vistaCompromisos.cuotaCero.forEach(function(c) { %>
+              <tr
+                data-row
+                data-q="<%= [c.descripcion, c.tarjeta].filter(Boolean).join(' ').toLowerCase() %>"
+                data-tarjeta="<%= c.tarjeta || '' %>"
+                x-show="rowVisible($el)"
+                x-cloak>
+                <td data-label="Descripción"><%= c.descripcion %></td>
+                <td data-label="Tarjeta"><%= c.tarjeta %></td>
+                <td class="col-num" data-label="Monto"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td class="col-num" data-label="Convertido">
+                  <% if (!c.esDivisaPrincipal) { %>
+                    <%= c.simboloPrincipal %> <%= c.montoPrincipal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                  <% } else { %>
+                    <span class="muted-dash">—</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    <% } else { %>
+      <div class="empty-state empty-state-inline">
+        <i class="fa-solid fa-circle-check empty-ico" aria-hidden="true"></i>
+        <p>Nada pendiente de facturar.</p>
       </div>
     <% } %>
-
-    <% if (vistaCompromisos && (vistaCompromisos.cuotaCero.length > 0 || vistaCompromisos.cuotas.length > 0)) { %>
-      <p class="total-line">
-        <strong>Total comprometido</strong>
-        <span><%= vistaCompromisos.totalFormateado %></span>
-      </p>
-    <% } %>
   </section>
-<% } %>
+
+  <section class="mv-card mv-section month-pane" id="sec-cuotas">
+    <div class="mv-section-head">
+      <h4 class="mv-section-title">
+        <i class="fa-solid fa-layer-group" aria-hidden="true"></i> Gastos en cuotas del mes
+      </h4>
+      <% if (vistaCompromisos && vistaCompromisos.cuotas.length > 0) { %>
+        <span class="cuotas-total-badge amount"><%= vistaCompromisos.totalFormateado %></span>
+      <% } %>
+    </div>
+
+    <% if (vistaCompromisos && vistaCompromisos.cuotas.length > 0) { %>
+      <%
+        const tarjetasCuotas = [...new Set(vistaCompromisos.cuotas.map(function(c) { return c.tarjeta; }).filter(Boolean))].sort();
+      %>
+      <div class="month-table" x-data="monthTable()">
+      <%- include('_month-filters', { options: { tarjetas: tarjetasCuotas, plan: true } }) %>
+      <div class="table-wrap table-wrap-flush" x-show="total > 0">
+        <table class="dt dt-compromisos">
+          <thead>
+            <tr>
+              <th><i class="fa-solid fa-align-left" aria-hidden="true"></i> Descripción</th>
+              <th><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Tarjeta</th>
+              <th class="col-plan"><i class="fa-solid fa-hashtag" aria-hidden="true"></i> Plan</th>
+              <th class="col-num"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> Monto</th>
+              <th class="col-num"><i class="fa-solid fa-coins" aria-hidden="true"></i> En <%= vistaCompromisos.divisaPrincipal ? vistaCompromisos.divisaPrincipal.codigo : 'ARS' %></th>
+            </tr>
+          </thead>
+          <tbody x-ref="body">
+            <% vistaCompromisos.cuotas.forEach(function(c) { %>
+              <%
+                var cuotaRowClass = '';
+                var esUltima = false;
+                var esPenultima = false;
+                if (Number(c.totalCuotas) > 1) {
+                  if (Number(c.numero) === Number(c.totalCuotas)) {
+                    cuotaRowClass = 'cuota-last';
+                    esUltima = true;
+                  } else if (Number(c.numero) === Number(c.totalCuotas) - 1) {
+                    cuotaRowClass = 'cuota-penultimate';
+                    esPenultima = true;
+                  }
+                }
+                var planFiltro = esUltima ? 'ultima' : (esPenultima ? 'penultima' : 'curso');
+                var pctPlan = Number(c.totalCuotas) > 0
+                  ? (Number(c.numero) / Number(c.totalCuotas)) * 100
+                  : 100;
+              %>
+              <tr<% if (cuotaRowClass) { %> class="<%= cuotaRowClass %>"<% } %>
+                data-row
+                data-q="<%= [c.descripcion, c.tarjeta].filter(Boolean).join(' ').toLowerCase() %>"
+                data-tarjeta="<%= c.tarjeta || '' %>"
+                data-plan="<%= planFiltro %>"
+                x-show="rowVisible($el)"
+                x-cloak>
+                <td data-label="Descripción">
+                  <span class="mov-desc"><%= c.descripcion %></span>
+                  <% if (esUltima) { %>
+                    <span class="badge-row">
+                      <%- include('_badge', { texto: 'Última cuota', variante: 'ok', icono: 'fa-flag-checkered' }) %>
+                    </span>
+                  <% } %>
+                </td>
+                <td data-label="Tarjeta"><%= c.tarjeta %></td>
+                <td class="col-plan" data-label="Plan">
+                  <span class="plan-progress" title="Cuota <%= c.numero %> de <%= c.totalCuotas %>">
+                    <span class="plan-progress-label"><%= c.numero %> de <%= c.totalCuotas %></span>
+                    <span class="plan-progress-track" aria-hidden="true">
+                      <span class="plan-progress-fill<%= esUltima ? ' is-last' : '' %>" style="width: <%= pctPlan %>%;"></span>
+                    </span>
+                  </span>
+                </td>
+                <td class="col-num" data-label="Monto"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td class="col-num" data-label="Convertido">
+                  <% if (!c.esDivisaPrincipal) { %>
+                    <%= c.simboloPrincipal %> <%= c.montoPrincipal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                  <% } else { %>
+                    <span class="muted-dash">—</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      </div>
+    <% } else { %>
+      <div class="empty-state empty-state-inline">
+        <i class="fa-solid fa-layer-group empty-ico" aria-hidden="true"></i>
+        <p>Sin cuotas de tarjeta este mes.</p>
+      </div>
+      <% if (vistaCompromisos && vistaCompromisos.cuotaCero.length > 0 && vistaCompromisos.porTarjeta && vistaCompromisos.porTarjeta.length > 0) { %>
+        <ul class="stat-breakdown">
+          <% vistaCompromisos.porTarjeta.forEach(function(t) { %>
+            <li class="stat-breakdown-item">
+              <span class="stat-breakdown-dot" style="background: <%= t.color %>;"></span>
+              <span class="stat-breakdown-name">Subtotal · <%= t.alias %></span>
+              <span class="stat-breakdown-value amount"><%= t.totalFormateado %></span>
+            </li>
+          <% }); %>
+        </ul>
+      <% } %>
+    <% } %>
+
+    <div class="cmp-sub">
+      <% if (culminados.count > 0) { %>
+        <div class="cmp-sub-body">
+          <p class="cmp-sub-texto">
+            Este mes finaliza<%= culminados.count === 1 ? '' : 'n' %> <strong><%= culminados.count %></strong> cuota<%= culminados.count === 1 ? '' : 's' %> por un monto de: <strong class="amount"><%= culminados.totalFormateado %></strong>
+          </p>
+          <button
+            type="button"
+            class="btn btn-accent btn-sm"
+            onclick="document.getElementById('culminados-modal').showModal()">
+            <i class="fa-solid fa-list" aria-hidden="true"></i> Ver detalle
+          </button>
+        </div>
+      <% } else { %>
+        <p class="cmp-sub-texto is-muted">Este mes no finaliza ninguna cuota.</p>
+      <% } %>
+    </div>
+  </section>
+
+  <% if (culminados.count > 0) { %>
+    <dialog id="culminados-modal" class="chart-modal">
+      <div class="chart-modal-inner">
+        <div class="chart-modal-header">
+          <h3>Cuotas finiquitadas este mes</h3>
+          <button
+            type="button"
+            class="chart-modal-close secondary outline btn-sm"
+            aria-label="Cerrar"
+            onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+        <div class="table-wrap">
+          <table class="dt">
+            <thead>
+              <tr>
+                <th><i class="fa-solid fa-align-left" aria-hidden="true"></i> Descripción</th>
+                <th><i class="fa-solid fa-credit-card" aria-hidden="true"></i> Tarjeta</th>
+                <th><i class="fa-solid fa-hashtag" aria-hidden="true"></i> Cuota</th>
+                <th class="col-num"><i class="fa-solid fa-dollar-sign" aria-hidden="true"></i> Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% culminados.items.forEach(function(c) { %>
+                <tr>
+                  <td data-label="Descripción"><%= c.descripcion %></td>
+                  <td data-label="Tarjeta"><%= c.tarjeta %></td>
+                  <td data-label="Cuota"><%= c.etiqueta %></td>
+                  <td class="col-num amount" data-label="Monto"><%= c.simboloPrincipal %> <%= Number(c.montoPrincipal).toLocaleString('es-AR') %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Total: <%= culminados.totalFormateado %></p>
+      </div>
+    </dialog>
+  <% } %>
+
+  <% if (
+    vistaPlata
+    && !vistaPlata.mensaje
+    && vistaPlata.ingresos.length === 0
+    && vistaPlata.egresos.length === 0
+    && vistaCompromisos
+    && vistaCompromisos.cuotaCero.length === 0
+    && vistaCompromisos.cuotas.length === 0
+    && !vistaCompromisos.mensaje
+  ) { %>
+    <div class="empty-state month-empty-global">
+      <i class="fa-solid fa-inbox empty-ico" aria-hidden="true"></i>
+      <p>Sin movimientos ni compromisos este mes</p>
+      <p class="empty-actions">
+        <a href="/ingresos#nuevo">Registrar ingreso</a>
+        <a href="/gastos#nuevo">Registrar gasto</a>
+      </p>
+    </div>
+  <% } %>
+</section>

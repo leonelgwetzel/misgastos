@@ -3,20 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f7f5f2">
+  <meta name="theme-color" content="#222838">
   <title><%= title %> — misgastos</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-  <link rel="stylesheet" href="/css/app.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="/css/app.css?v=20260927-auth-57">
   <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
+  <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/js/swal-app.js" defer></script>
+  <% } %>
+  <style>[x-cloak]{display:none!important}</style>
 </head>
-<body>
-  <div class="app-bg" aria-hidden="true"></div>
-  <main class="container app-shell">
-    <%- body %>
-  </main>
+<body class="<%= (typeof isAuthenticated !== 'undefined' && isAuthenticated) ? 'is-app' : 'is-auth' %>">
+  <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
+    <%
+      var navPath = typeof currentPath !== 'undefined' ? currentPath : '/';
+      var isMovView = navPath.startsWith('/movimientos')
+        || (navPath.startsWith('/ingresos') && !navPath.startsWith('/ingresos-fijos'))
+        || (navPath.startsWith('/gastos') && !navPath.startsWith('/gastos-fijos'));
+      var isConfigView = navPath.startsWith('/configuracion')
+        || navPath.startsWith('/cuentas')
+        || navPath.startsWith('/tarjetas')
+        || navPath.startsWith('/divisas')
+        || navPath.startsWith('/gastos-fijos')
+        || navPath.startsWith('/ingresos-fijos')
+        || navPath.startsWith('/categorias')
+        || navPath.startsWith('/usuarios');
+      var hasPageNav = isMovView || isConfigView;
+    %>
+    <div
+      class="workspace"
+      :class="{ 'is-rail-expanded': railExpanded }"
+      x-data="{
+        regOpen: false,
+        railExpanded: false,
+        init() {
+          try { this.railExpanded = localStorage.getItem('railExpanded') === '1'; } catch (e) {}
+        },
+        toggleRail() {
+          this.railExpanded = !this.railExpanded;
+          try { localStorage.setItem('railExpanded', this.railExpanded ? '1' : '0'); } catch (e) {}
+        }
+      }">
+      <%- include('../partials/sidebar') %>
+      <div class="canvas<%= typeof hideCanvasTop !== 'undefined' && hideCanvasTop ? ' canvas-flush' : '' %><%= hasPageNav ? ' canvas-nav' : '' %>">
+        <div class="canvas-body">
+          <% if (!(typeof hideCanvasTop !== 'undefined' && hideCanvasTop)) { %>
+            <button type="button" class="rail-toggle app-menu-btn" onclick="document.body.classList.toggle('rail-open')" aria-label="Menú"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+          <% } %>
+          <% if (hasPageNav) { %>
+            <div class="page-shell">
+              <%- include('../partials/page-nav') %>
+              <div class="page-main">
+                <%- body %>
+              </div>
+            </div>
+          <% } else { %>
+            <%- body %>
+          <% } %>
+        </div>
+      </div>
+      <div class="rail-backdrop" onclick="document.body.classList.remove('rail-open')"></div>
+    </div>
+    <%- include('../partials/mobile-dock') %>
+    <script>
+      window.monthTable = function () {
+        return {
+          q: '',
+          cat: '',
+          cuenta: '',
+          tarjeta: '',
+          tipo: '',
+          plan: '',
+          rows() {
+            if (!this.$refs.body) return [];
+            return Array.from(this.$refs.body.querySelectorAll('tr[data-row]'));
+          },
+          matches(el) {
+            const q = this.q.trim().toLowerCase();
+            if (q && !(el.dataset.q || '').includes(q)) return false;
+            if (this.cat && el.dataset.cat !== this.cat) return false;
+            if (this.cuenta && el.dataset.cuenta !== this.cuenta) return false;
+            if (this.tarjeta && el.dataset.tarjeta !== this.tarjeta) return false;
+            if (this.tipo && el.dataset.tipo !== this.tipo) return false;
+            if (this.plan === 'ultimas2') {
+              if (el.dataset.plan !== 'penultima') return false;
+            } else if (this.plan && el.dataset.plan !== this.plan) {
+              return false;
+            }
+            return true;
+          },
+          get total() {
+            return this.rows().filter((el) => this.matches(el)).length;
+          },
+          rowVisible(el) {
+            return this.matches(el);
+          }
+        };
+      };
+      document.body.addEventListener('htmx:afterSwap', function (event) {
+        if (window.Alpine && event.detail && event.detail.elt) {
+          Alpine.initTree(event.detail.elt);
+        }
+      });
+    </script>
+  <% } else { %>
+    <div class="auth-root">
+      <aside class="auth-hero">
+        <div class="auth-hero-lockup">
+          <img src="/img/logo-mark.png" width="72" height="72" alt="">
+          <div class="auth-hero-copy">
+            <span>misgastos</span>
+            <p>Conocé en qué se te va la plata</p>
+          </div>
+        </div>
+      </aside>
+      <%- body %>
+    </div>
+  <% } %>
 </body>
 </html>

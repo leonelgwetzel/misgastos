@@ -24,7 +24,7 @@ const DIVISAS_INICIALES = [
   { codigo: 'USD', simbolo: 'U$S', nombre: 'Dólar estadounidense' },
 ];
 
-async function register({ nombre, email, password }) {
+async function register({ nombre, email, password, perfil = 'cliente', habilitado = false }) {
   const existing = await prisma.usuario.findUnique({ where: { email } });
   if (existing) {
     return { error: 'Ya existe una cuenta con ese email' };
@@ -34,7 +34,7 @@ async function register({ nombre, email, password }) {
 
   const usuario = await prisma.$transaction(async (tx) => {
     const user = await tx.usuario.create({
-      data: { nombre, email, passwordHash },
+      data: { nombre, email, passwordHash, perfil, habilitado },
     });
 
     const divisas = [];
@@ -91,11 +91,17 @@ async function login({ email, password }) {
     return { error: 'Email o contraseña incorrectos' };
   }
 
+  if (!usuario.habilitado) {
+    return { error: 'Tu acceso todavía no fue habilitado' };
+  }
+
   return {
     usuario: {
       id: usuario.id,
       email: usuario.email,
       nombre: usuario.nombre,
+      perfil: usuario.perfil,
+      habilitado: usuario.habilitado,
       divisaPrincipal: usuario.divisaPrincipal,
     },
   };
@@ -106,6 +112,8 @@ function toSessionUser(usuario) {
     id: usuario.id,
     email: usuario.email,
     nombre: usuario.nombre,
+    perfil: usuario.perfil || 'cliente',
+    habilitado: usuario.habilitado !== false,
     divisaPrincipal: usuario.divisaPrincipal
       ? { codigo: usuario.divisaPrincipal.codigo, simbolo: usuario.divisaPrincipal.simbolo }
       : { codigo: 'ARS', simbolo: '$' },

@@ -1,0 +1,28 @@
+<%
+  var path = typeof currentPath !== 'undefined' ? currentPath : '/';
+  var isInicio = path === '/';
+  var isMov = path.startsWith('/movimientos') || (path.startsWith('/ingresos') && !path.startsWith('/ingresos-fijos')) || (path.startsWith('/gastos') && !path.startsWith('/gastos-fijos'));
+  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/gastos-fijos') || path.startsWith('/ingresos-fijos') || path.startsWith('/categorias');
+%>
+<nav class="bottom-nav" aria-label="Navegación móvil">
+  <a href="/" class="<%= isInicio ? 'nav-active' : '' %>">
+    <span class="bn-icon" aria-hidden="true">⌂</span>
+    Inicio
+  </a>
+  <a href="/movimientos" class="<%= isMov ? 'nav-active' : '' %>">
+    <span class="bn-icon" aria-hidden="true">↔</span>
+    Movimientos
+  </a>
+  <a href="/configuracion" class="<%= isConfig ? 'nav-active' : '' %>">
+    <span class="bn-icon" aria-hidden="true">⚙</span>
+    Config
+  </a>
+</nav>
+
+<div x-data="{ open: false }">
+  <button type="button" class="fab-registrar" @click="open = !open" aria-label="Registrar">+</button>
+  <div class="fab-menu" x-show="open" @click.outside="open = false" x-cloak>
+    <a href="/gastos#nuevo" @click="open = false">+ Gasto</a>
+    <a href="/ingresos#nuevo" @click="open = false">+ Ingreso</a>
+  </div>
+</div>

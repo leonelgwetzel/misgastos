@@ -1,0 +1,35 @@
+<%
+  var path = typeof currentPath !== 'undefined' ? currentPath : '/';
+  var isInicio = path === '/';
+  var isMov = path.startsWith('/movimientos') || (path.startsWith('/ingresos') && !path.startsWith('/ingresos-fijos')) || (path.startsWith('/gastos') && !path.startsWith('/gastos-fijos'));
+  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/gastos-fijos') || path.startsWith('/ingresos-fijos') || path.startsWith('/categorias');
+%>
+<header class="app-header">
+  <nav class="app-nav" aria-label="Principal" x-data="{ open: false }">
+    <a href="/" class="brand<%= isInicio ? ' nav-active' : '' %>">misgastos</a>
+
+    <div class="nav-links">
+      <a href="/" class="<%= isInicio ? 'nav-active' : '' %>">Inicio</a>
+      <a href="/movimientos" class="<%= isMov ? 'nav-active' : '' %>">Movimientos</a>
+      <a href="/configuracion" class="<%= isConfig ? 'nav-active' : '' %>">Configuración</a>
+    </div>
+
+    <div class="nav-actions">
+      <div class="nav-cta-wrap">
+        <button type="button" class="nav-cta" @click="open = !open" :aria-expanded="open.toString()">
+          Registrar
+          <span aria-hidden="true">▾</span>
+        </button>
+        <div class="nav-cta-menu" x-show="open" @click.outside="open = false" x-cloak>
+          <a href="/gastos#nuevo" @click="open = false">+ Gasto</a>
+          <a href="/ingresos#nuevo" @click="open = false">+ Ingreso</a>
+        </div>
+      </div>
+      <span class="nav-user-name"><%= user.nombre %></span>
+      <form action="/auth/logout" method="post" class="inline-form">
+        <button type="submit" class="secondary outline btn-sm">Salir</button>
+      </form>
+    </div>
+  </nav>
+</header>
+<style>[x-cloak]{display:none!important}</style>

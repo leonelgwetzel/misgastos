@@ -1,38 +1,115 @@
-<div class="month-shell">
-  <nav class="month-nav" aria-label="Navegación mensual">
-    <a href="<%= nav.prev %>&partial=month"
-       hx-get="<%= nav.prev %>&partial=month"
-       hx-target="#month-shell"
-       hx-push-url="true"
-       class="month-nav-btn"
-       aria-label="Mes anterior">‹</a>
-    <h2 class="month-label"><%= month.label %></h2>
-    <a href="<%= nav.next %>&partial=month"
-       hx-get="<%= nav.next %>&partial=month"
-       hx-target="#month-shell"
-       hx-push-url="true"
-       class="month-nav-btn"
-       aria-label="Mes siguiente">›</a>
-  </nav>
+<%
+  const snap = typeof vistaPlata !== 'undefined' && vistaPlata ? vistaPlata : {};
+  const totalIn = Number(snap.totalIngresos) || 0;
+  const totalOut = Number(snap.totalEgresosConTarjetas) || 0;
+  const flowSum = Math.max(totalIn + totalOut, 1);
+  const pctIn = (totalIn / flowSum) * 100;
+  const pctOut = (totalOut / flowSum) * 100;
+  const resultado = Number(snap.resultado) || 0;
+  const enVerde = resultado >= 0;
+%>
+<div class="month-shell month-shell-unified">
+  <div class="month-bar" id="sec-resumen" x-data="{ regOpen: false }">
+    <div class="month-bar-row">
+      <div class="month-bar-start">
+        <button type="button" class="rail-toggle app-menu-btn" onclick="document.body.classList.toggle('rail-open')" aria-label="Menú"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
 
-  <div class="tabs" role="tablist">
-    <a href="/?year=<%= month.year %>&month=<%= month.month %>&tab=compromisos"
-       hx-get="/?year=<%= month.year %>&month=<%= month.month %>&tab=compromisos"
-       hx-target="#tab-content"
-       hx-push-url="true"
-       class="tab <%= tab === 'compromisos' ? 'tab-active' : '' %>"
-       role="tab"
-       aria-selected="<%= tab === 'compromisos' %>">Compromisos</a>
-    <a href="/?year=<%= month.year %>&month=<%= month.month %>&tab=plata"
-       hx-get="/?year=<%= month.year %>&month=<%= month.month %>&tab=plata"
-       hx-target="#tab-content"
-       hx-push-url="true"
-       class="tab <%= tab === 'plata' ? 'tab-active' : '' %>"
-       role="tab"
-       aria-selected="<%= tab === 'plata' %>">Mi plata</a>
+        <nav class="month-nav" aria-label="Navegación mensual">
+        <a href="<%= nav.prev %>&partial=month"
+           hx-get="<%= nav.prev %>&partial=month"
+           hx-target="#month-shell"
+           hx-push-url="true"
+           class="month-nav-btn"
+           aria-label="Mes anterior"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
+        <% if (nav.isCurrentMonth) { %>
+          <h2 class="month-label"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> <%= month.label %></h2>
+        <% } else { %>
+          <a href="<%= nav.today %>&partial=month"
+             hx-get="<%= nav.today %>&partial=month"
+             hx-target="#month-shell"
+             hx-push-url="true"
+             class="month-label month-label-link"
+             title="Ir al mes actual"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> <%= month.label %></a>
+        <% } %>
+        <a href="<%= nav.next %>&partial=month"
+           hx-get="<%= nav.next %>&partial=month"
+           hx-target="#month-shell"
+           hx-push-url="true"
+           class="month-nav-btn"
+           aria-label="Mes siguiente"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+        </nav>
+      </div>
+
+      <div class="month-snap">
+        <div class="month-snap-metrics">
+          <div class="month-snap-item">
+            <i class="fa-solid fa-wallet month-snap-ico" aria-hidden="true"></i>
+            <span class="month-snap-value <%= enVerde ? 'is-ok' : 'is-danger' %>"><%= snap.resultadoFormateado || '—' %></span>
+            <span class="sr-only">Saldo</span>
+          </div>
+          <div class="month-snap-item">
+            <i class="fa-solid fa-arrow-trend-up month-snap-ico is-in" aria-hidden="true"></i>
+            <span class="month-snap-value is-in"><%= snap.totalIngresosFormateado || '—' %></span>
+            <span class="sr-only">Ingresos</span>
+          </div>
+          <div class="month-snap-item">
+            <i class="fa-solid fa-arrow-trend-down month-snap-ico is-out" aria-hidden="true"></i>
+            <span class="month-snap-value is-out"><%= snap.totalEgresosConTarjetasFormateado || '—' %></span>
+            <span class="sr-only">Egresos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="month-bar-actions">
+        <div class="reg-wrap">
+          <button type="button" class="btn-nuevo" @click="regOpen = !regOpen" aria-label="Nuevo">
+            <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+            <span>Nuevo</span>
+          </button>
+          <div class="reg-menu" x-show="regOpen" @click.outside="regOpen = false" x-cloak>
+            <a href="/gastos#nuevo" @click="regOpen = false"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Gasto</a>
+            <a href="/ingresos#nuevo" @click="regOpen = false"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Ingreso</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="month-snap-track" aria-hidden="true">
+      <span class="mh-flow-fill is-in<%= pctIn <= 0 ? ' is-empty' : '' %>" style="width: <%= Math.max(pctIn, 0) %>%;"></span>
+      <span class="mh-flow-fill is-out<%= pctOut <= 0 ? ' is-empty' : '' %>" style="width: <%= Math.max(pctOut, 0) %>%;"></span>
+    </div>
   </div>
 
-  <div id="tab-content">
-    <%- include('tab-content') %>
+  <nav class="month-secnav month-secnav-mobile" aria-label="Secciones del mes">
+    <a href="#sec-comparacion" class="month-secnav-link month-secnav-parent">Análisis</a>
+    <a href="#sec-ingresos" class="month-secnav-link">Ingresos</a>
+    <a href="#sec-egresos" class="month-secnav-link">Egresos</a>
+    <a href="#sec-pendiente" class="month-secnav-link">Pendiente</a>
+    <a href="#sec-cuotas" class="month-secnav-link">Cuotas</a>
+  </nav>
+  <nav class="month-secnav month-secnav-mobile month-secnav-charts" aria-label="Gráficos de análisis">
+    <a href="#sec-comparacion" class="month-secnav-link month-secnav-chart">Comparación meses</a>
+    <a href="#sec-categorias" class="month-secnav-link month-secnav-chart">Por categoría</a>
+    <a href="#sec-compromisos" class="month-secnav-link month-secnav-chart">Compromisos</a>
+  </nav>
+
+  <div class="month-layout">
+    <nav class="month-sidenav" aria-label="Secciones del mes">
+      <div class="month-sidenav-group">
+        <a href="#sec-comparacion" class="month-sidenav-link month-sidenav-parent"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i><span>Análisis</span></a>
+        <div class="month-sidenav-sub">
+          <a href="#sec-comparacion" class="month-sidenav-sublink">Comparación meses</a>
+          <a href="#sec-categorias" class="month-sidenav-sublink">Por categoría</a>
+          <a href="#sec-compromisos" class="month-sidenav-sublink">Compromisos</a>
+        </div>
+      </div>
+      <a href="#sec-ingresos" class="month-sidenav-link"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Ingresos</span></a>
+      <a href="#sec-egresos" class="month-sidenav-link"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Egresos</span></a>
+      <a href="#sec-pendiente" class="month-sidenav-link"><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Pendiente</span></a>
+      <a href="#sec-cuotas" class="month-sidenav-link"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Cuotas</span></a>
+    </nav>
+    <div id="tab-content">
+      <%- include('tab-content') %>
+    </div>
   </div>
 </div>

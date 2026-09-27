@@ -1,0 +1,160 @@
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · Usuarios</p>
+<div class="page-heading">
+  <h1>Usuarios</h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-usuario', listHref: '/usuarios', editing: editing }) %>
+</div>
+
+<%
+  var flashTitle = '';
+  var flashIcon = 'success';
+  if (success === 'creado') flashTitle = 'Usuario creado';
+  if (success === 'actualizado') flashTitle = 'Usuario actualizado';
+  if (success === 'eliminado') flashTitle = 'Solicitud eliminada';
+  if (success === 'habilitado') flashTitle = 'Acceso habilitado';
+  if (success === 'deshabilitado') flashTitle = 'Acceso deshabilitado';
+  if (typeof error !== 'undefined' && error) { flashTitle = error; flashIcon = 'error'; }
+  if (errors.general) { flashTitle = errors.general; flashIcon = 'error'; }
+%>
+<% if (flashTitle) { %>
+  <div id="mg-swal-flash" hidden data-title="<%= flashTitle %>" data-icon="<%= flashIcon %>"></div>
+<% } %>
+
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de usuarios</h2>
+    <% if (usuarios.length === 0) { %>
+      <p class="hint">Todavía no hay usuarios. <a href="#form" onclick="document.getElementById('capture-usuario').showModal(); return false;">Creá el primero</a>.</p>
+    <% } else { %>
+      <div class="table-wrap dt-wrap">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Perfil</th>
+              <th>Estado</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% usuarios.forEach(function(u) { %>
+              <tr>
+                <td data-label="Nombre"><strong><%= u.nombre %></strong></td>
+                <td data-label="Email"><%= u.email %></td>
+                <td data-label="Perfil">
+                  <span class="badge<%= u.perfil === 'admin' ? ' is-fijo' : '' %>"><%= u.perfil === 'admin' ? 'Admin' : 'Cliente' %></span>
+                </td>
+                <td data-label="Estado">
+                  <% if (u.habilitado) { %>
+                    <span class="badge is-ok">Habilitado</span>
+                  <% } else { %>
+                    <span class="badge is-proyectado">Pendiente</span>
+                  <% } %>
+                </td>
+                <td class="col-actions" data-label="Acciones">
+                  <div class="dt-actions">
+                    <% if (!u.habilitado) { %>
+                      <form method="post" action="/usuarios/<%= u.id %>/habilitar">
+                        <button type="submit" class="dt-ico-btn is-hist" title="Habilitar acceso" aria-label="Habilitar acceso">
+                          <i class="fa-solid fa-check" aria-hidden="true"></i>
+                        </button>
+                      </form>
+                    <% } else if (u.id !== actorId) { %>
+                      <form
+                        method="post"
+                        action="/usuarios/<%= u.id %>/deshabilitar"
+                        data-swal-title="Deshabilitar acceso"
+                        data-swal-text="Se va a pausar el acceso de <%= u.nombre %>."
+                        data-swal-confirm="Deshabilitar"
+                        data-swal-icon="warning">
+                        <button type="submit" class="dt-ico-btn is-more" title="Deshabilitar acceso" aria-label="Deshabilitar acceso">
+                          <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                        </button>
+                      </form>
+                    <% } %>
+                    <a href="/usuarios?edit=<%= u.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                    </a>
+                    <% if (!u.habilitado && u.id !== actorId) { %>
+                      <form
+                        method="post"
+                        action="/usuarios/<%= u.id %>/eliminar"
+                        data-swal-title="Eliminar solicitud"
+                        data-swal-text="Se borra la solicitud de <%= u.nombre %>. No se puede deshacer."
+                        data-swal-confirm="Eliminar"
+                        data-swal-icon="warning"
+                        data-swal-danger>
+                        <button type="submit" class="dt-ico-btn is-del" title="Eliminar solicitud" aria-label="Eliminar solicitud">
+                          <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                        </button>
+                      </form>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </article>
+</section>
+
+<dialog class="capture-sheet" id="capture-usuario">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2><%= editing ? 'Editar usuario' : 'Nuevo usuario' %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="<%= editing ? '/usuarios/' + editing.id + '/actualizar' : '/usuarios' %>">
+      <div class="cfg-form-fields">
+        <label>
+          Nombre
+          <input type="text" name="nombre" value="<%= values.nombre || '' %>" required maxlength="100" autocomplete="name">
+          <% if (errors.nombre) { %><small class="error-msg"><%= errors.nombre %></small><% } %>
+        </label>
+        <label>
+          Email
+          <input type="email" name="email" value="<%= values.email || '' %>" required autocomplete="email">
+          <% if (errors.email) { %><small class="error-msg"><%= errors.email %></small><% } %>
+        </label>
+        <label>
+          Contraseña<%= editing ? ' (opcional)' : '' %>
+          <input type="password" name="password" <%= editing ? '' : 'required' %> minlength="8" autocomplete="new-password" placeholder="<%= editing ? 'Dejar vacío para no cambiar' : '' %>">
+          <% if (errors.password) { %><small class="error-msg"><%= errors.password %></small><% } %>
+        </label>
+        <label>
+          Perfil
+          <%- include('../partials/_app-select', {
+            name: 'perfil',
+            required: true,
+            value: values.perfil || 'cliente',
+            options: [
+              { value: 'cliente', label: 'Cliente' },
+              { value: 'admin', label: 'Admin' }
+            ]
+          }) %>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" name="habilitado" value="on" <%= values.habilitado ? 'checked' : '' %>>
+          <span>Acceso habilitado</span>
+        </label>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="<%= editing ? 'Guardar cambios' : 'Agregar usuario' %>" aria-label="<%= editing ? 'Guardar cambios' : 'Agregar usuario' %>">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <% if (editing) { %>
+          <a href="/usuarios" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </a>
+        <% } else { %>
+          <button type="reset" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </button>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</dialog>
+<%- include('../partials/_capture-boot', { dialogId: 'capture-usuario', open: Boolean(editing) || (errors && Object.keys(errors).length > 0) }) %>

@@ -10,6 +10,30 @@ function utcDate(year, month, day = 1) {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+function utcToday() {
+  const now = new Date();
+  return utcDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+}
+
+function currentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function monthKeysInclusive(fromKey, toKey) {
+  if (!fromKey || !toKey || fromKey > toKey) return [];
+  const keys = [];
+  let [year, month] = fromKey.split('-').map(Number);
+  const [endYear, endMonth] = toKey.split('-').map(Number);
+  while (year < endYear || (year === endYear && month <= endMonth)) {
+    keys.push(`${year}-${String(month).padStart(2, '0')}`);
+    const next = shiftCalendarMonth(year, month, 1);
+    year = next.year;
+    month = next.month;
+  }
+  return keys;
+}
+
 /** Interpreta un valor @db.Date como fecha calendario sin corrimiento de zona. */
 function fromDbDate(date) {
   if (!date) return null;
@@ -52,15 +76,25 @@ function shiftCalendarMonth(year, month, delta) {
   return { year: y, month: m };
 }
 
-function monthNavUrls(year, month, tab = 'compromisos') {
-  const base = (y, m) => `/?year=${y}&month=${m}&tab=${tab}`;
+function monthNavUrls(year, month, tab) {
+  const base = (y, m) => {
+    let url = `/?year=${y}&month=${m}`;
+    // tab se ignora en la vista unificada; se acepta por compatibilidad de callers
+    if (tab) url += `&tab=${tab}`;
+    return url;
+  };
   const prev = shiftCalendarMonth(year, month, -1);
   const next = shiftCalendarMonth(year, month, 1);
+  const now = new Date();
+  const todayYear = now.getFullYear();
+  const todayMonth = now.getMonth() + 1;
 
   return {
     prev: base(prev.year, prev.month),
     next: base(next.year, next.month),
     current: base(year, month),
+    today: base(todayYear, todayMonth),
+    isCurrentMonth: year === todayYear && month === todayMonth,
   };
 }
 
@@ -68,6 +102,36 @@ function formatMoney(amount, symbol = '$') {
   const num = Number(amount);
   if (Number.isNaN(num)) return `${symbol} 0`;
   return `${symbol} ${num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+}
+
+function formatMoneyCompact(amount, symbol = '$') {
+  const num = Number(amount);
+  if (Number.isNaN(num) || num === 0) return `${symbol} 0`;
+  if (num >= 1_000_000) {
+    return `${symbol} ${(num / 1_000_000).toLocaleString('es-AR', { maximumFractionDigits: 1 })}M`;
+  }
+  if (num >= 1_000) {
+    return `${symbol} ${Math.round(num / 1_000).toLocaleString('es-AR')}k`;
+  }
+  return formatMoney(num, symbol);
+}
+
+function buildChartYAxisTicks(maxValue, tickCount = 4) {
+  if (maxValue <= 0) {
+    return { yMax: 0, ticks: [{ value: 0, label: formatMoneyCompact(0) }] };
+  }
+
+  const rawStep = maxValue / tickCount;
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep));
+  const step = Math.ceil(rawStep / magnitude) * magnitude;
+  const yMax = Math.ceil(maxValue / step) * step;
+  const ticks = [];
+
+  for (let value = 0; value <= yMax; value += step) {
+    ticks.push({ value, label: formatMoneyCompact(value) });
+  }
+
+  return { yMax, ticks };
 }
 
 function capitalize(str) {
@@ -86,6 +150,35 @@ function dateFromMonthKey(key) {
 
 function daysInMonth(year, month) {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+const WEEKDAY_LABELS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+
+function buildMonthDayGrid(year, month) {
+  const first = utcDate(year, month, 1);
+  const sundayIndex = first.getUTCDay();
+  const mondayPad = sundayIndex === 0 ? 6 : sundayIndex - 1;
+  const lastDay = daysInMonth(year, month);
+  const today = utcToday();
+  const cells = [];
+
+  for (let i = 0; i < mondayPad; i += 1) {
+    cells.push({ day: null, isToday: false });
+  }
+  for (let day = 1; day <= lastDay; day += 1) {
+    cells.push({
+      day,
+      isToday:
+        today.getUTCFullYear() === year
+        && today.getUTCMonth() + 1 === month
+        && today.getUTCDate() === day,
+    });
+  }
+  while (cells.length < 42) {
+    cells.push({ day: null, isToday: false });
+  }
+
+  return cells;
 }
 
 function endOfMonthFromKey(key) {
@@ -159,9 +252,16 @@ module.exports = {
   daysInMonth,
   monthNavUrls,
   formatMoney,
+  formatMoneyCompact,
+  buildChartYAxisTicks,
   capitalize,
   MONTH_NAMES,
+  WEEKDAY_LABELS,
+  buildMonthDayGrid,
   utcDate,
+  utcToday,
+  currentMonthKey,
+  monthKeysInclusive,
   fromDbDate,
   monthKeyFromDate,
   monthKeyFromDbDate,

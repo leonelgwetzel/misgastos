@@ -1,74 +1,133 @@
-<h1>Tarjetas</h1>
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · Tarjetas</p>
+<div class="page-heading">
+  <h1>Tarjetas</h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-tarjeta', listHref: '/tarjetas', editing: editing }) %>
+</div>
 
 <% if (success) { %>
   <p class="success-msg" role="status">Tarjeta <%= success %> correctamente.</p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
 <% } %>
 <% if (errors.general) { %>
   <p class="error-msg" role="alert"><%= errors.general %></p>
 <% } %>
 
-<section class="two-col">
-  <article class="panel">
-    <h2>Nueva tarjeta</h2>
-    <form method="post" action="/tarjetas">
-      <label>
-        Alias
-        <input type="text" name="alias" value="<%= values.alias || '' %>" required placeholder="Visa Galicia">
-        <% if (errors.alias) { %><small class="error-msg"><%= errors.alias %></small><% } %>
-      </label>
-      <label>
-        Banco
-        <input type="text" name="banco" value="<%= values.banco || '' %>" placeholder="Opcional">
-      </label>
-      <label>
-        Divisa
-        <select name="divisaId" required>
-          <% divisas.forEach(function(d) { %>
-            <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %> — <%= d.nombre %></option>
-          <% }); %>
-        </select>
-      </label>
-      <label>
-        Titularidad
-        <select name="titularidad">
-          <option value="PROPIA" <%= values.titularidad === 'PROPIA' ? 'selected' : '' %>>Propia</option>
-          <option value="TERCERO" <%= values.titularidad === 'TERCERO' ? 'selected' : '' %>>De tercero</option>
-        </select>
-      </label>
-      <div class="grid-2">
-        <label>
-          Día cierre
-          <input type="number" name="defaultCierreDia" min="1" max="28" value="<%= values.defaultCierreDia || 25 %>" required>
-        </label>
-        <label>
-          Vence mes +N
-          <input type="number" name="defaultVencimientoMes" min="0" max="3" value="<%= values.defaultVencimientoMes ?? 1 %>" required>
-        </label>
-      </div>
-      <button type="submit">Agregar tarjeta</button>
-    </form>
-  </article>
-
-  <article class="panel">
-    <h2>Mis tarjetas</h2>
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de tarjetas</h2>
     <% if (tarjetas.length === 0) { %>
-      <p class="hint">Todavía no tenés tarjetas cargadas.</p>
+      <p class="hint">Todavía no tenés tarjetas cargadas. <a href="#form" onclick="document.getElementById('capture-tarjeta').showModal(); return false;">Creá la primera</a>.</p>
     <% } else { %>
-      <ul class="card-list">
-        <% tarjetas.forEach(function(t) { %>
-          <li class="card-list-item">
-            <div>
-              <span class="item-title"><%= t.alias %></span>
-              <span class="hint"><%= t.divisa.codigo %><% if (t.banco) { %> · <%= t.banco %><% } %></span>
-            </div>
-            <form method="post" action="/tarjetas/<%= t.id %>/eliminar" onsubmit="return confirm('¿Eliminar tarjeta?')">
-              <button type="submit" class="secondary outline btn-sm">Eliminar</button>
-            </form>
-          </li>
-        <% }); %>
-      </ul>
+      <div class="table-wrap dt-wrap">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th>Alias</th>
+              <th>Divisa</th>
+              <th>Banco</th>
+              <th>Cierre</th>
+              <th>Vence</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% tarjetas.forEach(function(t) { %>
+              <tr>
+                <td data-label="Alias"><strong><%= t.alias %></strong></td>
+                <td data-label="Divisa"><%= t.divisa.codigo %></td>
+                <td data-label="Banco"><%= t.banco || '—' %></td>
+                <td data-label="Cierre">día <%= t.defaultCierreDia %></td>
+                <td data-label="Vence">+<%= t.defaultVencimientoMes %> mes<%= t.defaultVencimientoMes === 1 ? '' : 'es' %></td>
+                <td class="col-actions" data-label="Acciones">
+                  <div class="dt-actions">
+                    <a href="/tarjetas?edit=<%= t.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                    </a>
+                    <form method="post" action="/tarjetas/<%= t.id %>/eliminar" onsubmit="return confirm('¿Eliminar tarjeta?')">
+                      <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
     <% } %>
   </article>
 </section>
 
-<a href="/" class="page-back">← Inicio</a>
+<dialog class="capture-sheet" id="capture-tarjeta">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2><%= editing ? 'Editar tarjeta' : 'Nueva tarjeta' %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="<%= editing ? '/tarjetas/' + editing.id + '/actualizar' : '/tarjetas' %>">
+      <div class="cfg-form-fields">
+        <label>
+          Alias
+          <input type="text" name="alias" value="<%= values.alias || '' %>" required placeholder="Visa Galicia">
+          <% if (errors.alias) { %><small class="error-msg"><%= errors.alias %></small><% } %>
+        </label>
+        <label>
+          Banco
+          <input type="text" name="banco" value="<%= values.banco || '' %>" placeholder="Opcional">
+        </label>
+        <% if (!editing) { %>
+          <label>
+            Divisa
+            <%- include('../partials/_app-select', {
+              name: 'divisaId',
+              required: true,
+              value: values.divisaId || (divisas[0] && divisas[0].id) || '',
+              options: divisas.map(function(d) { return { value: d.id, label: d.codigo + ' — ' + d.nombre }; })
+            }) %>
+          </label>
+        <% } else { %>
+          <p class="hint">Divisa: <strong><%= editing.divisa.codigo %></strong> (no se cambia al editar)</p>
+        <% } %>
+        <label>
+          Titularidad
+          <%- include('../partials/_app-select', {
+            name: 'titularidad',
+            value: values.titularidad || 'PROPIA',
+            options: [
+              { value: 'PROPIA', label: 'Propia' },
+              { value: 'TERCERO', label: 'De tercero' }
+            ]
+          }) %>
+        </label>
+        <div class="grid-2">
+          <label>
+            Día de cierre
+            <input type="number" name="defaultCierreDia" min="1" max="28" value="<%= values.defaultCierreDia || 25 %>" required>
+          </label>
+          <label>
+            Vence mes +N
+            <input type="number" name="defaultVencimientoMes" min="0" max="3" value="<%= values.defaultVencimientoMes ?? 1 %>" required>
+          </label>
+        </div>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="<%= editing ? 'Guardar cambios' : 'Agregar tarjeta' %>" aria-label="<%= editing ? 'Guardar cambios' : 'Agregar tarjeta' %>">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <% if (editing) { %>
+          <a href="/tarjetas" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </a>
+        <% } else { %>
+          <button type="reset" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </button>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</dialog>
+<%- include('../partials/_capture-boot', { dialogId: 'capture-tarjeta', open: Boolean(editing) || (errors && Object.keys(errors).length > 0) }) %>

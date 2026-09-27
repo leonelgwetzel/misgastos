@@ -22,6 +22,7 @@ async function list(req, res) {
   res.render('gastos-fijos/index', {
     title: 'Gastos fijos',
     ...data,
+    mesActual,
     errors: {},
     values: {
       medioPago: 'TARJETA',
@@ -29,6 +30,7 @@ async function list(req, res) {
       vigenteDesde: `${mesActual}-01`,
     },
     success: req.query.success || null,
+    error: req.query.error || null,
   });
 }
 
@@ -42,12 +44,16 @@ async function create(req, res) {
       ? Object.fromEntries(err.issues.map((e) => [e.path[0], e.message]))
       : { general: err.message };
 
+    const today = new Date();
+    const mesActual = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
     return res.status(400).render('gastos-fijos/index', {
       title: 'Gastos fijos',
       ...data,
+      mesActual,
       errors,
       values: req.body,
       success: null,
+      error: null,
     });
   }
 }
@@ -64,10 +70,7 @@ async function addHistorial(req, res) {
 
 async function setOverride(req, res) {
   try {
-    await gastoFijoService.setMesOverride(req.session.userId, req.params.id, {
-      ...req.body,
-      omitido: req.body.omitido === 'on' || req.body.omitido === 'true',
-    });
+    await gastoFijoService.setMesOverride(req.session.userId, req.params.id, req.body);
     return res.redirect('/gastos-fijos?success=override');
   } catch (err) {
     return res.redirect(`/gastos-fijos?error=${encodeURIComponent(err.message)}`);

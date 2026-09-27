@@ -1,0 +1,185 @@
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · Categorías</p>
+<div class="page-heading">
+  <h1>Categorías</h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-cat', listHref: '/categorias', editing: editing }) %>
+</div>
+
+<% if (success) { %>
+  <p class="success-msg" role="status">
+    <% if (success === 'creada') { %>Categoría creada.<% } %>
+    <% if (success === 'actualizada') { %>Categoría actualizada.<% } %>
+    <% if (success === 'eliminada') { %>Categoría eliminada.<% } %>
+  </p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
+<% } %>
+<% if (errors.general) { %>
+  <p class="error-msg" role="alert"><%= errors.general %></p>
+<% } %>
+
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de categorías</h2>
+    <% if (categorias.length === 0) { %>
+      <p class="hint">Todavía no tenés categorías. <a href="#form" onclick="document.getElementById('capture-cat').showModal(); return false;">Creá la primera</a>.</p>
+    <% } else { %>
+      <div class="table-wrap dt-wrap">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th><i class="fa-solid fa-tag" aria-hidden="true"></i> Nombre</th>
+              <th class="col-num">Usos</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% categorias.forEach(function(c) { %>
+              <tr>
+                <td data-label="Nombre">
+                  <span class="cat-cell">
+                    <%- include('../partials/_chip-categoria', {
+                      nombre: c.nombre,
+                      color: c.color,
+                      icono: c.icono,
+                      soloIcono: true
+                    }) %>
+                    <strong><%= c.nombre %></strong>
+                    <% if (c.esSistema) { %> <span class="hint">· inicial</span><% } %>
+                  </span>
+                </td>
+                <td class="col-num" data-label="Usos"><%= c.usos %></td>
+                <td class="col-actions" data-label="Acciones">
+                  <div class="dt-actions">
+                    <a href="/categorias?edit=<%= c.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                    </a>
+                    <form method="post" action="/categorias/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar “<%= c.nombre %>”? Los gastos e ingresos quedan sin categoría.')">
+                      <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </article>
+</section>
+
+<dialog class="capture-sheet" id="capture-cat">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2><%= editing ? 'Editar categoría' : 'Nueva categoría' %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form
+      class="cat-form"
+      method="post"
+      action="<%= editing ? '/categorias/' + editing.id + '/actualizar' : '/categorias' %>"
+      x-data="{
+        nombre: <%= JSON.stringify(values.nombre || '') %>,
+        icono: <%= JSON.stringify(values.icono || 'fa-tag') %>,
+        color: <%= JSON.stringify(values.color || colores[0]) %>,
+        iconoDefault: 'fa-tag',
+        colorDefault: <%= JSON.stringify(colores[0]) %>,
+        openIcon: false,
+        openColor: false,
+        limpiar() {
+          this.nombre = '';
+          this.icono = this.iconoDefault;
+          this.color = this.colorDefault;
+          this.openIcon = false;
+          this.openColor = false;
+        }
+      }">
+      <div class="cat-form-fields">
+      <div class="cat-form-title">
+        <span class="cat-preview-ico" :style="`background: ${color}`">
+          <i class="fa-solid" :class="icono" aria-hidden="true"></i>
+        </span>
+        <input
+          type="text"
+          name="nombre"
+          class="cat-form-name"
+          x-model="nombre"
+          required
+          maxlength="40"
+          placeholder="Inserte el nombre de la categoría"
+          aria-label="Nombre de la categoría">
+      </div>
+      <% if (errors.nombre) { %><small class="error-msg cat-form-error"><%= errors.nombre %></small><% } %>
+
+      <input type="hidden" name="icono" :value="icono">
+      <input type="hidden" name="color" :value="color">
+
+      <div class="cat-form-tools">
+        <div class="cat-dd" @click.outside="openIcon = false">
+          <button type="button" class="cat-dd-btn" @click="openIcon = !openIcon; openColor = false" aria-label="Elegir ícono">
+            <i class="fa-solid" :class="icono" aria-hidden="true"></i>
+            <span>Ícono</span>
+            <i class="fa-solid fa-chevron-down cat-dd-caret" aria-hidden="true"></i>
+          </button>
+          <div class="reg-menu cat-dd-menu" x-show="openIcon" x-cloak>
+            <div class="cat-icon-grid">
+              <% iconos.forEach(function(item) { %>
+                <button
+                  type="button"
+                  class="cat-icon-btn"
+                  :class="{ 'is-active': icono === '<%= item.id %>' }"
+                  :style="icono === '<%= item.id %>' ? `background: ${color}; border-color: ${color}; color: #fff` : ''"
+                  @click="icono = '<%= item.id %>'; openIcon = false"
+                  title="<%= item.label %>"
+                  aria-label="<%= item.label %>">
+                  <i class="fa-solid <%= item.id %>" aria-hidden="true"></i>
+                </button>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+
+        <div class="cat-dd" @click.outside="openColor = false">
+          <button type="button" class="cat-dd-btn" @click="openColor = !openColor; openIcon = false" aria-label="Elegir color">
+            <span class="cat-dd-swatch" :style="`background: ${color}`"></span>
+            <span>Color</span>
+            <i class="fa-solid fa-chevron-down cat-dd-caret" aria-hidden="true"></i>
+          </button>
+          <div class="reg-menu cat-dd-menu" x-show="openColor" x-cloak>
+            <div class="cat-color-grid">
+              <% colores.forEach(function(hex) { %>
+                <button
+                  type="button"
+                  class="cat-color-btn"
+                  :class="{ 'is-active': color === '<%= hex %>' }"
+                  style="background: <%= hex %>;"
+                  @click="color = '<%= hex %>'; openColor = false"
+                  title="<%= hex %>"
+                  aria-label="Color <%= hex %>"></button>
+              <% }); %>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="<%= editing ? 'Guardar cambios' : 'Agregar categoría' %>" aria-label="<%= editing ? 'Guardar cambios' : 'Agregar categoría' %>">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <% if (editing) { %>
+          <a href="/categorias" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </a>
+        <% } else { %>
+          <button type="button" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar" @click="limpiar()">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </button>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</dialog>
+<%- include('../partials/_capture-boot', { dialogId: 'capture-cat', open: Boolean(editing) || (errors && Object.keys(errors).length > 0) }) %>

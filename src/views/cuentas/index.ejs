@@ -1,69 +1,130 @@
-<h1>Cuentas</h1>
+<p class="config-crumb"><a href="/configuracion">Configuración</a> · Cuentas</p>
+<div class="page-heading">
+  <h1>Cuentas</h1>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-cuenta', listHref: '/cuentas', editing: editing }) %>
+</div>
 
 <% if (success) { %>
   <p class="success-msg" role="status">
     <% if (success === 'creada') { %>Cuenta creada.<% } %>
+    <% if (success === 'actualizada') { %>Cuenta actualizada.<% } %>
     <% if (success === 'eliminada') { %>Cuenta eliminada.<% } %>
   </p>
+<% } %>
+<% if (typeof error !== 'undefined' && error) { %>
+  <p class="error-msg" role="alert"><%= error %></p>
 <% } %>
 <% if (errors.general) { %>
   <p class="error-msg" role="alert"><%= errors.general %></p>
 <% } %>
 
-<section class="two-col">
-  <article class="panel">
-    <h2>Nueva cuenta</h2>
-    <form method="post" action="/cuentas">
-      <label>
-        Nombre
-        <input type="text" name="nombre" value="<%= values.nombre || '' %>" required placeholder="Galicia caja ahorro">
-        <% if (errors.nombre) { %><small class="error-msg"><%= errors.nombre %></small><% } %>
-      </label>
-      <label>
-        Tipo
-        <select name="tipo" required>
-          <option value="BANCO" <%= values.tipo === 'BANCO' ? 'selected' : '' %>>Banco</option>
-          <option value="BILLETERA" <%= values.tipo === 'BILLETERA' ? 'selected' : '' %>>Billetera virtual</option>
-          <option value="EFECTIVO" <%= values.tipo === 'EFECTIVO' ? 'selected' : '' %>>Efectivo</option>
-        </select>
-      </label>
-      <label>
-        Divisa
-        <select name="divisaId" required>
-          <% divisas.forEach(function(d) { %>
-            <option value="<%= d.id %>" <%= values.divisaId === d.id ? 'selected' : '' %>><%= d.codigo %> — <%= d.nombre %></option>
-          <% }); %>
-        </select>
-      </label>
-      <label>
-        Saldo inicial
-        <input type="number" name="saldoInicial" step="0.01" value="<%= values.saldoInicial ?? 0 %>">
-      </label>
-      <button type="submit">Agregar cuenta</button>
-    </form>
-  </article>
-
-  <article class="panel">
-    <h2>Mis cuentas</h2>
+<section class="page-pane cfg-layout">
+  <article class="panel cfg-list-panel">
+    <h2>Listado de cuentas</h2>
     <% if (cuentas.length === 0) { %>
-      <p class="hint">Todavía no tenés cuentas cargadas.</p>
+      <p class="hint">Todavía no tenés cuentas cargadas. <a href="#form" onclick="document.getElementById('capture-cuenta').showModal(); return false;">Creá la primera</a>.</p>
     <% } else { %>
-      <ul class="card-list">
-        <% cuentas.forEach(function(c) { %>
-          <li class="card-list-item">
-            <div>
-              <a href="/cuentas/<%= c.id %>/movimientos" class="item-title"><%= c.nombre %></a>
-              <span class="hint"><%= c.tipo.toLowerCase() %> · <%= c.divisa.codigo %></span>
-              <span class="expense-amount"><%= c.divisa.simbolo %> <%= Number(c.saldoActual).toLocaleString('es-AR') %></span>
-            </div>
-            <form method="post" action="/cuentas/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar cuenta?')">
-              <button type="submit" class="secondary outline btn-sm">Eliminar</button>
-            </form>
-          </li>
-        <% }); %>
-      </ul>
+      <div class="table-wrap dt-wrap">
+        <table class="dt">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Divisa</th>
+              <th class="col-num">Saldo</th>
+              <th class="col-actions">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% cuentas.forEach(function(c) { %>
+              <tr>
+                <td data-label="Nombre"><a href="/cuentas/<%= c.id %>/movimientos" class="item-title"><%= c.nombre %></a></td>
+                <td data-label="Tipo"><%= c.tipo.toLowerCase() %></td>
+                <td data-label="Divisa"><%= c.divisa.codigo %></td>
+                <td class="col-num" data-label="Saldo"><%= c.divisa.simbolo %> <%= Number(c.saldoActual).toLocaleString('es-AR') %></td>
+                <td class="col-actions" data-label="Acciones">
+                  <div class="dt-actions">
+                    <a href="/cuentas?edit=<%= c.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                    </a>
+                    <a href="/cuentas/<%= c.id %>/movimientos" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial">
+                      <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                    </a>
+                    <form method="post" action="/cuentas/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar cuenta?')">
+                      <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
     <% } %>
   </article>
 </section>
 
-<a href="/" class="page-back">← Inicio</a>
+<dialog class="capture-sheet" id="capture-cuenta">
+  <div class="capture-sheet-inner">
+    <div class="capture-sheet-header">
+      <h2><%= editing ? 'Editar cuenta' : 'Nueva cuenta' %></h2>
+      <button type="button" class="secondary outline btn-sm capture-close" onclick="this.closest('dialog').close()" aria-label="Cerrar">✕</button>
+    </div>
+    <form class="cat-form" method="post" action="<%= editing ? '/cuentas/' + editing.id + '/actualizar' : '/cuentas' %>">
+      <div class="cfg-form-fields">
+        <label>
+          Nombre
+          <input type="text" name="nombre" value="<%= values.nombre || '' %>" required placeholder="Galicia caja ahorro">
+          <% if (errors.nombre) { %><small class="error-msg"><%= errors.nombre %></small><% } %>
+        </label>
+        <label>
+          Tipo
+          <%- include('../partials/_app-select', {
+            name: 'tipo',
+            required: true,
+            value: values.tipo || 'BANCO',
+            options: [
+              { value: 'BANCO', label: 'Banco' },
+              { value: 'BILLETERA', label: 'Billetera virtual' },
+              { value: 'EFECTIVO', label: 'Efectivo' }
+            ]
+          }) %>
+        </label>
+        <% if (!editing) { %>
+          <label>
+            Divisa
+            <%- include('../partials/_app-select', {
+              name: 'divisaId',
+              required: true,
+              value: values.divisaId || (divisas[0] && divisas[0].id) || '',
+              options: divisas.map(function(d) { return { value: d.id, label: d.codigo + ' — ' + d.nombre }; })
+            }) %>
+          </label>
+          <label>
+            Saldo inicial
+            <input type="number" name="saldoInicial" step="0.01" value="<%= values.saldoInicial ?? 0 %>">
+          </label>
+        <% } else { %>
+          <p class="hint">Divisa: <strong><%= editing.divisa.codigo %></strong> · Saldo: <%= editing.divisa.simbolo %> <%= Number(editing.saldoActual).toLocaleString('es-AR') %></p>
+        <% } %>
+      </div>
+      <div class="form-actions cat-form-actions">
+        <button type="submit" class="btn btn-accent cat-form-ico-btn" title="<%= editing ? 'Guardar cambios' : 'Agregar cuenta' %>" aria-label="<%= editing ? 'Guardar cambios' : 'Agregar cuenta' %>">
+          <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+        </button>
+        <% if (editing) { %>
+          <a href="/cuentas" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </a>
+        <% } else { %>
+          <button type="reset" class="btn secondary outline cat-form-ico-btn" title="Limpiar" aria-label="Limpiar">
+            <i class="fa-solid fa-eraser" aria-hidden="true"></i>
+          </button>
+        <% } %>
+      </div>
+    </form>
+  </div>
+</dialog>
+<%- include('../partials/_capture-boot', { dialogId: 'capture-cuenta', open: Boolean(editing) || (errors && Object.keys(errors).length > 0) }) %>
