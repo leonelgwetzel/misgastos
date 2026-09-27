@@ -22,4 +22,5 @@ COPY src ./src
 COPY public ./public
 
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma migrate deploy && node src/index.js"]
+# APP_ROLE=bot → worker de Telegram. Cualquier otro valor → web + migraciones.
+CMD ["sh", "-c", "if [ \"$APP_ROLE\" = \"bot\" ]; then node src/bot/index.js; else npx prisma migrate deploy && node src/index.js; fi"]
