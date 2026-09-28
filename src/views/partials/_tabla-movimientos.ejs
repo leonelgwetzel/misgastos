@@ -3,7 +3,6 @@
   const extras = (typeof filasExtra !== 'undefined' && filasExtra) ? filasExtra : [];
   const esIngreso = tipo === 'ingreso';
   const signo = esIngreso ? '+' : '−';
-  const tono = esIngreso ? 'positive' : '';
   const hayAlgo = movItems.length > 0 || extras.length > 0;
 %>
 <section class="mv-card mv-section month-pane" id="<%= id %>">
@@ -14,7 +13,7 @@
     <% if (hayAlgo) { %>
       <span class="mv-section-total">
         <span class="mv-section-total-label">Total</span>
-        <span class="mv-section-total-value amount <%= tono %>"><%= totalFormateado %></span>
+        <span class="mv-section-total-value amount"><%= totalFormateado %></span>
       </span>
     <% } %>
   </div>
@@ -80,9 +79,9 @@
               </td>
               <td class="col-cuenta" data-label="Cuenta"><%= item.cuenta %></td>
               <td class="col-num col-monto" data-label="Monto">
-                <span class="amount <%= tono %>"><%= signo %><%= item.simbolo %> <%= item.monto.toLocaleString('es-AR') %></span>
+                <span class="amount"><%= signo %><%= item.simbolo %> <%= item.monto.toLocaleString('es-AR') %></span>
                 <span class="mov-bar" aria-hidden="true">
-                  <span class="mov-bar-fill<%= tono ? ' is-' + tono : '' %>" style="width: <%= Math.max(item.pctDelMayor || 0, 2) %>%;"></span>
+                  <span class="mov-bar-fill" style="width: <%= Math.max(item.pctDelMayor || 0, 2) %>%;"></span>
                 </span>
               </td>
             </tr>
@@ -104,7 +103,7 @@
           <% }); %>
           <tr class="dt-total">
             <td colspan="4" data-label="Total"><strong><%= titulo %> del mes</strong></td>
-            <td class="col-num" data-label="Monto"><strong class="amount <%= tono %>"><%= totalFormateado %></strong></td>
+            <td class="col-num" data-label="Monto"><strong class="amount"><%= totalFormateado %></strong></td>
           </tr>
         </tfoot>
       </table>
@@ -136,7 +135,7 @@
         <% }); %>
         <li class="mv-extra-item is-total">
           <span class="mv-extra-label"><strong><%= titulo %> del mes</strong></span>
-          <span class="mv-extra-value amount <%= tono %>"><strong><%= totalFormateado %></strong></span>
+          <span class="mv-extra-value amount"><strong><%= totalFormateado %></strong></span>
         </li>
       </ul>
     <% } %>

@@ -37,10 +37,10 @@
           <tbody>
             <% movimientos.forEach(function(m) { %>
               <tr>
-                <td data-label="Descripción"><%= m.descripcion || m.tipo.toLowerCase() %></td>
+                <td class="col-desc" data-label="Descripción"><%= m.descripcion || m.tipo.toLowerCase() %></td>
                 <td data-label="Fecha"><%= new Date(m.fecha).toLocaleDateString('es-AR') %></td>
                 <td data-label="Tipo"><%= m.tipo.toLowerCase() %></td>
-                <td class="col-num <%= m.tipo === 'INGRESO' ? 'amount positive' : m.tipo === 'EGRESO' ? 'amount negative' : '' %>" data-label="Monto">
+                <td class="col-num<%= m.tipo === 'EGRESO' ? ' amount negative' : '' %>" data-label="Monto">
                   <%= m.tipo === 'EGRESO' ? '−' : m.tipo === 'INGRESO' ? '+' : '±' %>
                   <%= m.divisa.simbolo %> <%= Number(m.monto).toLocaleString('es-AR') %>
                 </td>

@@ -206,7 +206,7 @@
       <div class="month-table" x-data="monthTable()">
       <%- include('_month-filters', { options: { tarjetas: tarjetasPend } }) %>
       <div class="table-wrap table-wrap-flush" x-show="total > 0">
-        <table class="dt">
+        <table class="dt dt-cuotas">
           <thead>
             <tr>
               <th><i class="fa-solid fa-align-left" aria-hidden="true"></i> Descripción</th>
@@ -223,10 +223,10 @@
                 data-tarjeta="<%= c.tarjeta || '' %>"
                 x-show="rowVisible($el)"
                 x-cloak>
-                <td data-label="Descripción"><%= c.descripcion %></td>
-                <td data-label="Tarjeta"><%= c.tarjeta %></td>
-                <td class="col-num" data-label="Monto"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                <td class="col-num" data-label="Convertido">
+                <td class="col-desc" data-label="Descripción"><span class="mov-desc"><%= c.descripcion %></span></td>
+                <td class="col-tarjeta" data-label="Tarjeta"><%= c.tarjeta %></td>
+                <td class="col-num col-monto" data-label="Monto"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td class="col-num col-conv<%= c.esDivisaPrincipal ? ' is-same' : '' %>" data-label="Convertido">
                   <% if (!c.esDivisaPrincipal) { %>
                     <%= c.simboloPrincipal %> <%= c.montoPrincipal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                   <% } else { %>
@@ -264,7 +264,7 @@
       <div class="month-table" x-data="monthTable()">
       <%- include('_month-filters', { options: { tarjetas: tarjetasCuotas, plan: true } }) %>
       <div class="table-wrap table-wrap-flush" x-show="total > 0">
-        <table class="dt dt-compromisos">
+        <table class="dt dt-compromisos dt-cuotas">
           <thead>
             <tr>
               <th><i class="fa-solid fa-align-left" aria-hidden="true"></i> Descripción</th>
@@ -301,25 +301,25 @@
                 data-plan="<%= planFiltro %>"
                 x-show="rowVisible($el)"
                 x-cloak>
-                <td data-label="Descripción">
+                <td class="col-desc" data-label="Descripción">
                   <span class="mov-desc"><%= c.descripcion %></span>
                   <% if (esUltima) { %>
                     <span class="badge-row">
-                      <%- include('_badge', { texto: 'Última cuota', variante: 'ok', icono: 'fa-flag-checkered' }) %>
+                      <%- include('_badge', { texto: 'Última', variante: 'ok', icono: 'fa-flag-checkered' }) %>
                     </span>
                   <% } %>
                 </td>
-                <td data-label="Tarjeta"><%= c.tarjeta %></td>
+                <td class="col-tarjeta" data-label="Tarjeta"><%= c.tarjeta %></td>
                 <td class="col-plan" data-label="Plan">
                   <span class="plan-progress" title="Cuota <%= c.numero %> de <%= c.totalCuotas %>">
-                    <span class="plan-progress-label"><%= c.numero %> de <%= c.totalCuotas %></span>
+                    <span class="plan-progress-label"><%= c.numero %>/<%= c.totalCuotas %></span>
                     <span class="plan-progress-track" aria-hidden="true">
                       <span class="plan-progress-fill<%= esUltima ? ' is-last' : '' %>" style="width: <%= pctPlan %>%;"></span>
                     </span>
                   </span>
                 </td>
-                <td class="col-num" data-label="Monto"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                <td class="col-num" data-label="Convertido">
+                <td class="col-num col-monto" data-label="Monto"><%= c.simbolo %> <%= c.montoOriginal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td class="col-num col-conv<%= c.esDivisaPrincipal ? ' is-same' : '' %>" data-label="Convertido">
                   <% if (!c.esDivisaPrincipal) { %>
                     <%= c.simboloPrincipal %> <%= c.montoPrincipal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                   <% } else { %>
@@ -381,7 +381,7 @@
             onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
         </div>
         <div class="table-wrap">
-          <table class="dt">
+          <table class="dt dt-cuotas">
             <thead>
               <tr>
                 <th><i class="fa-solid fa-align-left" aria-hidden="true"></i> Descripción</th>
@@ -393,10 +393,10 @@
             <tbody>
               <% culminados.items.forEach(function(c) { %>
                 <tr>
-                  <td data-label="Descripción"><%= c.descripcion %></td>
-                  <td data-label="Tarjeta"><%= c.tarjeta %></td>
-                  <td data-label="Cuota"><%= c.etiqueta %></td>
-                  <td class="col-num amount" data-label="Monto"><%= c.simboloPrincipal %> <%= Number(c.montoPrincipal).toLocaleString('es-AR') %></td>
+                  <td class="col-desc" data-label="Descripción"><span class="mov-desc"><%= c.descripcion %></span></td>
+                  <td class="col-tarjeta" data-label="Tarjeta"><%= c.tarjeta %></td>
+                  <td class="col-plan" data-label="Cuota"><%= c.etiqueta %></td>
+                  <td class="col-num col-monto amount" data-label="Monto"><%= c.simboloPrincipal %> <%= Number(c.montoPrincipal).toLocaleString('es-AR') %></td>
                 </tr>
               <% }); %>
             </tbody>

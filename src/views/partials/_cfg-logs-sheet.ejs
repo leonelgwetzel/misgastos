@@ -26,8 +26,8 @@
                 <tbody>
                   <% g.rows.forEach(function(row) { %>
                     <tr>
-                      <% row.forEach(function(cell) { %>
-                        <td><%= cell %></td>
+                      <% row.forEach(function(cell, i) { %>
+                        <td<% if (i === 0) { %> class="col-desc"<% } %>><%= cell %></td>
                       <% }); %>
                     </tr>
                   <% }); %>

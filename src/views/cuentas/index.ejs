@@ -38,7 +38,7 @@
           <tbody>
             <% cuentas.forEach(function(c) { %>
               <tr>
-                <td data-label="Nombre"><a href="/cuentas/<%= c.id %>/movimientos" class="item-title"><%= c.nombre %></a></td>
+                <td class="col-desc" data-label="Nombre"><a href="/cuentas/<%= c.id %>/movimientos" class="item-title"><%= c.nombre %></a></td>
                 <td data-label="Tipo"><%= c.tipo.toLowerCase() %></td>
                 <td data-label="Divisa"><%= c.divisa.codigo %></td>
                 <td class="col-num" data-label="Saldo"><%= c.divisa.simbolo %> <%= Number(c.saldoActual).toLocaleString('es-AR') %></td>

@@ -35,7 +35,7 @@
           <tbody>
             <% tarjetas.forEach(function(t) { %>
               <tr>
-                <td data-label="Alias"><strong><%= t.alias %></strong></td>
+                <td class="col-desc" data-label="Alias"><strong><%= t.alias %></strong></td>
                 <td data-label="Divisa"><%= t.divisa.codigo %></td>
                 <td data-label="Banco"><%= t.banco || '—' %></td>
                 <td data-label="Cierre">día <%= t.defaultCierreDia %></td>

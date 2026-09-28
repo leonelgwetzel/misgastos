@@ -39,7 +39,7 @@
           <tbody>
             <% usuarios.forEach(function(u) { %>
               <tr>
-                <td data-label="Nombre"><strong><%= u.nombre %></strong></td>
+                <td class="col-desc" data-label="Nombre"><strong><%= u.nombre %></strong></td>
                 <td data-label="Email"><%= u.email %></td>
                 <td data-label="Perfil">
                   <span class="badge<%= u.perfil === 'admin' ? ' is-fijo' : '' %>"><%= u.perfil === 'admin' ? 'Admin' : 'Cliente' %></span>

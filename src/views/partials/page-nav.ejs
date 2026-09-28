@@ -16,8 +16,8 @@
 %>
 <% if (isMov) { %>
   <nav class="month-secnav month-secnav-mobile" aria-label="Secciones de movimientos">
-    <a href="/gastos" class="month-secnav-link<%= isGastos ? ' is-active' : '' %>">Gastos</a>
-    <a href="/ingresos" class="month-secnav-link<%= isIngresos ? ' is-active' : '' %>">Ingresos</a>
+    <a href="/gastos" class="month-secnav-link<%= isGastos ? ' is-active' : '' %>"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Gastos</span></a>
+    <a href="/ingresos" class="month-secnav-link<%= isIngresos ? ' is-active' : '' %>"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Ingresos</span></a>
   </nav>
   <nav class="month-sidenav" aria-label="Secciones de movimientos">
     <a href="/gastos" class="month-sidenav-link<%= isGastos ? ' is-active' : '' %>"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Gastos</span></a>
@@ -25,16 +25,19 @@
   </nav>
 <% } else if (isConfig) { %>
   <nav class="month-secnav month-secnav-mobile" aria-label="Secciones de configuración">
-    <a href="/configuracion" class="month-secnav-link<%= isConfigHome ? ' is-active' : '' %>">Telegram</a>
-    <a href="/cuentas" class="month-secnav-link<%= isCuentas ? ' is-active' : '' %>">Cuentas</a>
-    <a href="/tarjetas" class="month-secnav-link<%= isTarjetas ? ' is-active' : '' %>">Tarjetas</a>
-    <a href="/divisas" class="month-secnav-link<%= isDivisas ? ' is-active' : '' %>">Divisas</a>
-    <a href="/gastos-fijos" class="month-secnav-link<%= isGastosFijos ? ' is-active' : '' %>">Gastos fijos</a>
-    <a href="/ingresos-fijos" class="month-secnav-link<%= isIngresosFijos ? ' is-active' : '' %>">Ingresos fijos</a>
-    <a href="/categorias" class="month-secnav-link<%= isCategorias ? ' is-active' : '' %>">Categorías</a>
+    <a href="/configuracion" class="month-secnav-link<%= isConfigHome ? ' is-active' : '' %>"><i class="fa-brands fa-telegram" aria-hidden="true"></i><span>Telegram</span></a>
+    <a href="/cuentas" class="month-secnav-link<%= isCuentas ? ' is-active' : '' %>"><i class="fa-solid fa-building-columns" aria-hidden="true"></i><span>Cuentas</span></a>
+    <a href="/tarjetas" class="month-secnav-link<%= isTarjetas ? ' is-active' : '' %>"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Tarjetas</span></a>
+    <a href="/divisas" class="month-secnav-link<%= isDivisas ? ' is-active' : '' %>"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>Divisas</span></a>
+    <a href="/gastos-fijos" class="month-secnav-link<%= isGastosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-rotate" aria-hidden="true"></i><span>Gastos fijos</span></a>
+    <a href="/ingresos-fijos" class="month-secnav-link<%= isIngresosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Ingresos fijos</span></a>
+    <a href="/categorias" class="month-secnav-link<%= isCategorias ? ' is-active' : '' %>"><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Categorías</span></a>
     <% if (showUsuarios) { %>
-      <a href="/usuarios" class="month-secnav-link<%= isUsuarios ? ' is-active' : '' %>">Usuarios</a>
+      <a href="/usuarios" class="month-secnav-link<%= isUsuarios ? ' is-active' : '' %>"><i class="fa-solid fa-users" aria-hidden="true"></i><span>Usuarios</span></a>
     <% } %>
+    <form action="/auth/logout" method="post" class="month-secnav-logout">
+      <button type="submit" class="month-secnav-link"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i><span>Salir</span></button>
+    </form>
   </nav>
   <nav class="month-sidenav" aria-label="Secciones de configuración">
     <a href="/configuracion" class="month-sidenav-link<%= isConfigHome ? ' is-active' : '' %>"><i class="fa-brands fa-telegram" aria-hidden="true"></i><span>Telegram</span></a>

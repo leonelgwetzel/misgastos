@@ -67,17 +67,21 @@
           <% gastos.forEach(function(g) { %>
             <% const deleteQs = []; if (pagination.page > 1) deleteQs.push('page=' + pagination.page); if (filtro.q) deleteQs.push('q=' + encodeURIComponent(filtro.q)); const deleteAction = '/gastos/' + g.id + '/eliminar' + (deleteQs.length ? '?' + deleteQs.join('&') : ''); %>
             <tr>
-              <td data-label="Descripción"><strong><%= g.descripcion %></strong><% if (g.cantidadCuotas > 1) { %> <span class="hint"><%= g.cantidadCuotas %> cuotas</span><% } %></td>
+              <td class="col-desc" data-label="Descripción"><strong><%= g.descripcion %></strong><% if (g.cantidadCuotas > 1) { %> <span class="hint"><%= g.cantidadCuotas %> cuotas</span><% } %></td>
               <td data-label="Fecha"><%= new Date(g.fechaCompra).toLocaleDateString('es-AR') %></td>
               <td data-label="Medio"><%= g.medioPago.toLowerCase() %></td>
               <td data-label="Detalle"><% if (g.tarjeta) { %><%= g.tarjeta.alias %><% } else if (g.cuenta) { %><%= g.cuenta.nombre %><% } else { %>—<% } %></td>
               <td class="col-num" data-label="Monto"><%= g.divisa.simbolo %> <%= Number(g.montoOriginal).toLocaleString('es-AR') %></td>
               <td class="col-actions" data-label="Acciones">
                 <div class="dt-actions">
-                  <a href="/gastos?edit=<%= g.id %><%= filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? '&page=' + pagination.page : '' %>#nuevo" class="secondary outline btn-sm">Editar</a>
+                  <a href="/gastos?edit=<%= g.id %><%= filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? '&page=' + pagination.page : '' %>#nuevo" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                    <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                  </a>
                   <form method="post" action="<%= deleteAction %>"
                         onsubmit="return confirm('<%= g.medioPago === 'TARJETA' ? (g.gastoFijoId ? '¿Borrar este gasto y todas sus cuotas? Si es de un gasto fijo, puede regenerarse al entrar al inicio.' : '¿Borrar este gasto y todas sus cuotas?') : '¿Borrar este gasto?' %>')">
-                    <button type="submit" class="secondary outline btn-sm">Borrar</button>
+                    <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                      <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    </button>
                   </form>
                 </div>
               </td>

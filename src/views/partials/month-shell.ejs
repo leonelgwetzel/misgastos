@@ -12,8 +12,6 @@
   <div class="month-bar" id="sec-resumen" x-data="{ regOpen: false }">
     <div class="month-bar-row">
       <div class="month-bar-start">
-        <button type="button" class="rail-toggle app-menu-btn" onclick="document.body.classList.toggle('rail-open')" aria-label="Menú"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
-
         <nav class="month-nav" aria-label="Navegación mensual">
         <a href="<%= nav.prev %>&partial=month"
            hx-get="<%= nav.prev %>&partial=month"
@@ -81,16 +79,16 @@
   </div>
 
   <nav class="month-secnav month-secnav-mobile" aria-label="Secciones del mes">
-    <a href="#sec-comparacion" class="month-secnav-link month-secnav-parent">Análisis</a>
-    <a href="#sec-ingresos" class="month-secnav-link">Ingresos</a>
-    <a href="#sec-egresos" class="month-secnav-link">Egresos</a>
-    <a href="#sec-pendiente" class="month-secnav-link">Pendiente</a>
-    <a href="#sec-cuotas" class="month-secnav-link">Cuotas</a>
+    <a href="#sec-comparacion" class="month-secnav-link month-secnav-parent"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i><span>Análisis</span></a>
+    <a href="#sec-ingresos" class="month-secnav-link"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Ingresos</span></a>
+    <a href="#sec-egresos" class="month-secnav-link"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Egresos</span></a>
+    <a href="#sec-pendiente" class="month-secnav-link"><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Pendiente</span></a>
+    <a href="#sec-cuotas" class="month-secnav-link"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Cuotas</span></a>
   </nav>
   <nav class="month-secnav month-secnav-mobile month-secnav-charts" aria-label="Gráficos de análisis">
-    <a href="#sec-comparacion" class="month-secnav-link month-secnav-chart">Comparación meses</a>
-    <a href="#sec-categorias" class="month-secnav-link month-secnav-chart">Por categoría</a>
-    <a href="#sec-compromisos" class="month-secnav-link month-secnav-chart">Compromisos</a>
+    <a href="#sec-comparacion" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Comparación</span></a>
+    <a href="#sec-categorias" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>Categoría</span></a>
+    <a href="#sec-compromisos" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i><span>Compromisos</span></a>
   </nav>
 
   <div class="month-layout">

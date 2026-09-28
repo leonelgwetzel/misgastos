@@ -66,19 +66,23 @@
         <tbody>
           <% ingresos.forEach(function(i) { %>
             <tr>
-              <td data-label="Descripción"><strong><%= i.descripcion || 'Ingreso' %></strong></td>
+              <td class="col-desc" data-label="Descripción"><strong><%= i.descripcion || 'Ingreso' %></strong></td>
               <td data-label="Fecha"><%= new Date(i.fecha).toLocaleDateString('es-AR') %></td>
               <td data-label="Cuenta"><%= i.cuenta.nombre %></td>
               <td data-label="Categoría"><%= i.categoria ? i.categoria.nombre : '—' %></td>
-              <td class="col-num amount positive" data-label="Monto">+<%= i.divisa.simbolo %> <%= Number(i.monto).toLocaleString('es-AR') %></td>
+              <td class="col-num" data-label="Monto"><%= i.divisa.simbolo %> <%= Number(i.monto).toLocaleString('es-AR') %></td>
               <td class="col-actions" data-label="Acciones">
                 <div class="dt-actions">
-                  <a href="/ingresos?edit=<%= i.id %><%= filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? '&page=' + pagination.page : '' %>#nuevo" class="secondary outline btn-sm">Editar</a>
+                  <a href="/ingresos?edit=<%= i.id %><%= filtro.q ? '&q=' + encodeURIComponent(filtro.q) : '' %><%= pagination.page > 1 ? '&page=' + pagination.page : '' %>#nuevo" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                    <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                  </a>
                   <% if (!i.gastoId) { %>
                     <% const deleteQs = []; if (pagination.page > 1) deleteQs.push('page=' + pagination.page); if (filtro.q) deleteQs.push('q=' + encodeURIComponent(filtro.q)); %>
                     <form method="post" action="/ingresos/<%= i.id %>/eliminar<%= deleteQs.length ? '?' + deleteQs.join('&') : '' %>"
                           onsubmit="return confirm('¿Borrar este ingreso?')">
-                      <button type="submit" class="secondary outline btn-sm">Borrar</button>
+                      <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                      </button>
                     </form>
                   <% } %>
                 </div>

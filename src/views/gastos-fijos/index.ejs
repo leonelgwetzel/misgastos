@@ -39,7 +39,7 @@
           <tbody>
             <% gastosFijos.filter(f => f.activo).forEach(function(f) { %>
               <tr>
-                <td data-label="Descripción"><strong><%= f.descripcion %></strong></td>
+                <td class="col-desc" data-label="Descripción"><strong><%= f.descripcion %></strong></td>
                 <td class="col-num" data-label="Monto"><%= f.divisa.simbolo %> <%= f.historial[0] ? Number(f.historial[0].monto).toLocaleString('es-AR') : '—' %></td>
                 <td data-label="Medio"><%= f.medioPago.toLowerCase() %></td>
                 <td data-label="Día"><%= f.diaDelMes %></td>

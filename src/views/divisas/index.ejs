@@ -31,10 +31,10 @@
         <tbody>
           <% divisas.forEach(function(d) { %>
             <tr>
-              <td data-label="Código"><strong><%= d.codigo %></strong></td>
+              <td class="col-desc" data-label="Código"><strong><%= d.codigo %></strong></td>
               <td data-label="Nombre"><%= d.nombre %></td>
               <td data-label="Símbolo"><%= d.simbolo %></td>
-              <td data-label="Tarifa">
+              <td class="col-num" data-label="Tarifa">
                 <% if (divisaPrincipal && d.id === divisaPrincipal.id) { %>
                   <span class="hint">Principal</span>
                 <% } else if (divisaPrincipal) { %>
