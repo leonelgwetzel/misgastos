@@ -1,7 +1,7 @@
 <p class="config-crumb"><a href="/configuracion">Configuración</a> · Tarjetas</p>
 <div class="page-heading">
   <h1>Tarjetas</h1>
-  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-tarjeta', listHref: '/tarjetas', editing: editing }) %>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-tarjeta', listHref: '/tarjetas', editing: editing, icon: 'fa-credit-card', ariaLabel: 'Nueva tarjeta' }) %>
 </div>
 
 <% if (success) { %>
@@ -20,43 +20,37 @@
     <% if (tarjetas.length === 0) { %>
       <p class="hint">Todavía no tenés tarjetas cargadas. <a href="#form" onclick="document.getElementById('capture-tarjeta').showModal(); return false;">Creá la primera</a>.</p>
     <% } else { %>
-      <div class="table-wrap dt-wrap">
-        <table class="dt">
-          <thead>
-            <tr>
-              <th>Alias</th>
-              <th>Divisa</th>
-              <th>Banco</th>
-              <th>Cierre</th>
-              <th>Vence</th>
-              <th class="col-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% tarjetas.forEach(function(t) { %>
-              <tr>
-                <td class="col-desc" data-label="Alias"><strong><%= t.alias %></strong></td>
-                <td data-label="Divisa"><%= t.divisa.codigo %></td>
-                <td data-label="Banco"><%= t.banco || '—' %></td>
-                <td data-label="Cierre">día <%= t.defaultCierreDia %></td>
-                <td data-label="Vence">+<%= t.defaultVencimientoMes %> mes<%= t.defaultVencimientoMes === 1 ? '' : 'es' %></td>
-                <td class="col-actions" data-label="Acciones">
-                  <div class="dt-actions">
-                    <a href="/tarjetas?edit=<%= t.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
-                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
-                    </a>
-                    <form method="post" action="/tarjetas/<%= t.id %>/eliminar" onsubmit="return confirm('¿Eliminar tarjeta?')">
-                      <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
-                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
+      <ul class="cfg-cards">
+        <% tarjetas.forEach(function(t) { %>
+          <%
+            var meses = Number(t.defaultVencimientoMes);
+            var vence = meses === 0 ? 'Vence el mes del cierre' : (meses === 1 ? 'Vence al mes siguiente' : 'Vence a los ' + meses + ' meses');
+          %>
+          <li class="cfg-card is-plastic">
+            <div class="cfg-card-head cfg-card-band">
+              <h3 class="cfg-card-title"><%= t.alias %></h3>
+              <span class="cfg-card-value"><%= t.divisa.codigo %></span>
+            </div>
+            <p class="cfg-card-meta">
+              <span><%= t.banco || 'Sin banco' %></span>
+              <span>Cierra día <%= t.defaultCierreDia %></span>
+              <span><%= vence %></span>
+            </p>
+            <div class="cfg-card-foot">
+              <div class="dt-actions">
+                <a href="/tarjetas?edit=<%= t.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                  <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                </a>
+                <form method="post" action="/tarjetas/<%= t.id %>/eliminar" onsubmit="return confirm('¿Eliminar tarjeta?')">
+                  <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
     <% } %>
   </article>
 </section>
@@ -108,7 +102,7 @@
             <input type="number" name="defaultCierreDia" min="1" max="28" value="<%= values.defaultCierreDia || 25 %>" required>
           </label>
           <label>
-            Vence mes +N
+            Meses después del cierre
             <input type="number" name="defaultVencimientoMes" min="0" max="3" value="<%= values.defaultVencimientoMes ?? 1 %>" required>
           </label>
         </div>

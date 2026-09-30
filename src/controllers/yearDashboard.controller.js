@@ -1,13 +1,11 @@
 const yearCalendarService = require('../services/yearCalendar.service');
 
-async function index(req, res) {
-  const year = yearCalendarService.parseYear(req.query.year);
-  const calendar = await yearCalendarService.getYearCalendar(req.session.userId, year);
-
-  return res.render('dashboard/year', {
-    title: 'Resumen anual',
-    calendar,
-  });
+function index(req, res) {
+  if (req.query.year) {
+    const year = yearCalendarService.parseYear(req.query.year);
+    return res.redirect(`/?year=${year}&month=1#sec-anio`);
+  }
+  return res.redirect('/');
 }
 
 module.exports = { index };

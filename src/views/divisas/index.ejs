@@ -1,7 +1,7 @@
 <p class="config-crumb"><a href="/configuracion">Configuración</a> · Divisas</p>
 <div class="page-heading">
   <h1>Divisas</h1>
-  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-divisa', listHref: '/divisas' }) %>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-divisa', listHref: '/divisas', icon: 'fa-coins', ariaLabel: 'Nueva divisa' }) %>
 </div>
 
 <% if (success) { %>
@@ -17,55 +17,42 @@
 <section class="page-pane cfg-layout">
   <article class="panel cfg-list-panel">
     <h2>Listado de divisas</h2>
-    <div class="table-wrap dt-wrap">
-      <table class="dt">
-        <thead>
-          <tr>
-            <th>Código</th>
-            <th>Nombre</th>
-            <th>Símbolo</th>
-            <th>Tarifa → principal</th>
-            <th class="col-actions">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% divisas.forEach(function(d) { %>
-            <tr>
-              <td class="col-desc" data-label="Código"><strong><%= d.codigo %></strong></td>
-              <td data-label="Nombre"><%= d.nombre %></td>
-              <td data-label="Símbolo"><%= d.simbolo %></td>
-              <td class="col-num" data-label="Tarifa">
-                <% if (divisaPrincipal && d.id === divisaPrincipal.id) { %>
-                  <span class="hint">Principal</span>
-                <% } else if (divisaPrincipal) { %>
-                  <%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa).toLocaleString('es-AR') : '—' %>
-                <% } else { %>—<% } %>
-              </td>
-              <td class="col-actions" data-label="Acciones">
-                <div class="dt-actions">
-                  <% if (divisaPrincipal && d.id !== divisaPrincipal.id) { %>
-                    <button type="button" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial" onclick="document.getElementById('logs-divisa-<%= d.id %>').showModal()">
-                      <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                    </button>
-                    <form method="post" action="/divisas/tarifas" class="dt-inline-form">
-                      <input type="hidden" name="divisaId" value="<%= d.id %>">
-                      <input type="number" name="tasa" step="0.000001" min="0.000001"
-                        value="<%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa) : '' %>"
-                        placeholder="Tasa" required aria-label="Tasa">
-                      <button type="submit" class="dt-ico-btn is-edit" title="Guardar tarifa" aria-label="Guardar tarifa">
-                        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
-                      </button>
-                    </form>
-                  <% } else { %>
-                    <span class="muted-dash">—</span>
-                  <% } %>
-                </div>
-              </td>
-            </tr>
-          <% }); %>
-        </tbody>
-      </table>
-    </div>
+    <ul class="cfg-cards">
+      <% divisas.forEach(function(d) { %>
+        <li class="cfg-card">
+          <div class="cfg-card-head">
+            <h3 class="cfg-card-title"><%= d.codigo %></h3>
+            <span class="cfg-card-value"><%= d.simbolo %></span>
+          </div>
+          <p class="cfg-card-meta">
+            <span><%= d.nombre %></span>
+            <% if (divisaPrincipal && d.id === divisaPrincipal.id) { %>
+              <span>Principal</span>
+            <% } else if (divisaPrincipal) { %>
+              <span>Tarifa <%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa).toLocaleString('es-AR') : '—' %></span>
+            <% } %>
+          </p>
+          <% if (divisaPrincipal && d.id !== divisaPrincipal.id) { %>
+            <div class="cfg-card-foot">
+              <form method="post" action="/divisas/tarifas" class="dt-inline-form">
+                <input type="hidden" name="divisaId" value="<%= d.id %>">
+                <input type="number" name="tasa" step="0.000001" min="0.000001"
+                  value="<%= d.tarifasDefault[0] ? Number(d.tarifasDefault[0].tasa) : '' %>"
+                  placeholder="Tasa" required aria-label="Tasa">
+                <button type="submit" class="dt-ico-btn is-edit" title="Guardar tarifa" aria-label="Guardar tarifa">
+                  <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                </button>
+              </form>
+              <div class="dt-actions">
+                <button type="button" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial" onclick="document.getElementById('logs-divisa-<%= d.id %>').showModal()">
+                  <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+          <% } %>
+        </li>
+      <% }); %>
+    </ul>
   </article>
 </section>
 

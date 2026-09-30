@@ -1,0 +1,38 @@
+<div
+  class="mobile-fab"
+  x-data="{
+    open: false,
+    collapsed: false,
+    init() {
+      try { this.collapsed = localStorage.getItem('fabCollapsed') === '1'; } catch (e) {}
+    },
+    toggleCollapse() {
+      this.collapsed = !this.collapsed;
+      this.open = false;
+      try { localStorage.setItem('fabCollapsed', this.collapsed ? '1' : '0'); } catch (e) {}
+    }
+  }"
+  :class="{ 'is-collapsed': collapsed }"
+  x-cloak>
+  <div class="mobile-fab-cluster" @click.outside="open = false">
+    <div class="reg-menu mobile-fab-menu" x-show="open && !collapsed" x-cloak>
+      <a href="/gastos#nuevo" @click="open = false"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Gasto</a>
+      <a href="/ingresos#nuevo" @click="open = false"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Ingreso</a>
+    </div>
+    <button type="button" class="mobile-fab-hide" x-show="!collapsed" @click="toggleCollapse()" aria-label="Ocultar nuevo">
+      <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+    </button>
+    <button
+      type="button"
+      class="mobile-fab-btn"
+      x-show="!collapsed"
+      @click="open = !open"
+      :aria-expanded="open.toString()"
+      aria-label="Nuevo">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="mobile-fab-tab" x-show="collapsed" @click="toggleCollapse()" aria-label="Mostrar nuevo">
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+    </button>
+  </div>
+</div>

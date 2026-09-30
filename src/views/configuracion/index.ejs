@@ -1,9 +1,9 @@
 <p class="config-crumb">Configuración · Telegram</p>
 <div class="page-heading">
   <h1>Telegram</h1>
-  <button type="button" class="btn-nuevo" onclick="document.getElementById('capture-telegram').showModal()">
-    <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
-    <span>Vincular</span>
+  <button type="button" class="btn-nuevo is-mark" onclick="document.getElementById('capture-telegram').showModal()" aria-label="Vincular chat">
+    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+    <i class="fa-brands fa-telegram" aria-hidden="true"></i>
   </button>
 </div>
 
@@ -21,38 +21,27 @@
   <article class="panel cfg-list-panel">
     <h2>Listado de chats</h2>
     <% if (telegram.activos.length > 0) { %>
-      <div class="table-wrap dt-wrap">
-        <table class="dt">
-          <thead>
-            <tr>
-              <th>Chat</th>
-              <th>Vinculado</th>
-              <th class="col-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% telegram.activos.forEach(function(v) { %>
-              <tr>
-                <td class="col-desc" data-label="Chat">
-                  <strong><i class="fa-solid fa-user" aria-hidden="true"></i> <%= v.alias %></strong>
-                </td>
-                <td data-label="Vinculado">
-                  <%= new Date(v.vinculadoEn).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }) %>
-                </td>
-                <td class="col-actions" data-label="Acciones">
-                  <div class="dt-actions">
-                    <form method="POST" action="/configuracion/telegram/<%= v.id %>/desvincular">
-                      <button type="submit" class="dt-ico-btn is-del" title="Desconectar" aria-label="Desconectar">
-                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
+      <ul class="cfg-cards">
+        <% telegram.activos.forEach(function(v) { %>
+          <li class="cfg-card">
+            <div class="cfg-card-head">
+              <h3 class="cfg-card-title"><i class="fa-solid fa-user" aria-hidden="true"></i> <%= v.alias %></h3>
+            </div>
+            <p class="cfg-card-meta">
+              <span>Vinculado <%= new Date(v.vinculadoEn).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }) %></span>
+            </p>
+            <div class="cfg-card-foot">
+              <div class="dt-actions">
+                <form method="POST" action="/configuracion/telegram/<%= v.id %>/desvincular">
+                  <button type="submit" class="dt-ico-btn is-del" title="Desconectar" aria-label="Desconectar">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
     <% } else { %>
       <p class="hint">Todavía no hay chats vinculados. <a href="#form" onclick="document.getElementById('capture-telegram').showModal(); return false;">Generá un código</a>.</p>
     <% } %>
@@ -80,7 +69,11 @@
             <strong class="tg-codigo-value"><%= telegram.pendiente.codigo %></strong>
             <span class="tg-codigo-hint">
               Vence en <%= telegram.pendiente.minutosRestantes %> minuto<%= telegram.pendiente.minutosRestantes === 1 ? '' : 's' %>.
-              Abrí el chat con el bot y mandá <code>/vincular <%= telegram.pendiente.codigo %></code>
+              <% if (telegram.botUrl) { %>
+                <a href="<%= telegram.botUrl %>" target="_blank" rel="noopener noreferrer">Abrí el chat</a>: el código viaja en el enlace.
+              <% } else { %>
+                Abrí el chat con el bot y mandá <code>/vincular <%= telegram.pendiente.codigo %></code>
+              <% } %>
             </span>
           </div>
         <% } %>

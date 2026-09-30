@@ -11,6 +11,7 @@
     <% } %>
 
     <div class="cat-candles-plot">
+      <div class="cat-candles-track">
       <% velas.forEach(function(cat, i) {
         const body = Math.max(cat.pctDelMayor || 0, 8);
         const icono = cat.icon || cat.icono || '';
@@ -35,6 +36,7 @@
           <% } %>
         </div>
       <% }); %>
+      </div>
     </div>
   </div>
 <% } else { %>

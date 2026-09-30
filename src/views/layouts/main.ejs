@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
-  <link rel="stylesheet" href="/css/app.css?v=20260927-mobile-64">
+  <link rel="stylesheet" href="/css/app.css?v=20260930-month-bar">
   <script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
   <script defer src="https://unpkg.com/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
@@ -26,14 +26,12 @@
     <%
       var navPath = typeof currentPath !== 'undefined' ? currentPath : '/';
       var isMovView = navPath.startsWith('/movimientos')
-        || (navPath.startsWith('/ingresos') && !navPath.startsWith('/ingresos-fijos'))
-        || (navPath.startsWith('/gastos') && !navPath.startsWith('/gastos-fijos'));
+        || navPath.startsWith('/ingresos')
+        || navPath.startsWith('/gastos');
       var isConfigView = navPath.startsWith('/configuracion')
         || navPath.startsWith('/cuentas')
         || navPath.startsWith('/tarjetas')
         || navPath.startsWith('/divisas')
-        || navPath.startsWith('/gastos-fijos')
-        || navPath.startsWith('/ingresos-fijos')
         || navPath.startsWith('/categorias')
         || navPath.startsWith('/usuarios');
       var hasPageNav = isMovView || isConfigView;
@@ -69,6 +67,7 @@
       </div>
       <div class="rail-backdrop" onclick="document.body.classList.remove('rail-open')"></div>
     </div>
+    <%- include('../partials/mobile-fab') %>
     <%- include('../partials/mobile-dock') %>
     <script>
       window.monthTable = function () {
@@ -103,6 +102,67 @@
           rowVisible(el) {
             return this.matches(el);
           }
+        };
+      };
+      window.pie3dCallouts = function () {
+        return {
+          detail: null,
+          boot() {
+            const run = () => this.fit();
+            this.$nextTick(run);
+            const stage = this.$root.querySelector('.pie3d-stage');
+            if (stage && typeof ResizeObserver !== 'undefined') {
+              const ro = new ResizeObserver(run);
+              ro.observe(stage);
+            }
+            if (typeof IntersectionObserver !== 'undefined') {
+              const io = new IntersectionObserver((entries) => {
+                if (entries.some((entry) => entry.isIntersecting)) run();
+              });
+              io.observe(this.$root);
+            }
+          },
+          fit() {
+            const stage = this.$root.querySelector('.pie3d-stage');
+            if (!stage) return;
+            const bounds = stage.getBoundingClientRect();
+            if (bounds.width < 8) return;
+            const chips = Array.from(stage.querySelectorAll('[data-pie-chip]'));
+            chips.forEach((el) => {
+              el.dataset.mode = el.dataset.prefer === 'pct' ? 'pct' : 'full';
+            });
+            const hits = (a, b) => a.left < b.right - 4 && a.right > b.left + 4 && a.top < b.bottom - 4 && a.bottom > b.top + 4;
+            for (let pass = 0; pass < chips.length; pass += 1) {
+              const rects = chips.map((el) => el.getBoundingClientRect());
+              let victim = -1;
+              chips.forEach((el, i) => {
+                if (el.dataset.mode !== 'full') return;
+                const box = rects[i];
+                const outside = box.left < bounds.left + 1 || box.right > bounds.right - 1
+                  || box.top < bounds.top + 1 || box.bottom > bounds.bottom - 1;
+                const overlap = rects.some((other, j) => j !== i && hits(box, other));
+                if (!outside && !overlap) return;
+                if (victim === -1 || Number(el.dataset.pct) < Number(chips[victim].dataset.pct)) victim = i;
+              });
+              if (victim === -1) break;
+              chips[victim].dataset.mode = 'pct';
+            }
+          },
+          open(event) {
+            const el = event.currentTarget;
+            if (el.dataset.mode !== 'pct') return;
+            this.detail = {
+              alias: el.dataset.alias,
+              pct: el.dataset.pct,
+              total: el.dataset.total,
+              pastel: el.dataset.pastel,
+              ink: el.dataset.ink,
+            };
+            this.$refs.pop.showModal();
+          },
+          close() {
+            this.$refs.pop.close();
+          },
         };
       };
       document.body.addEventListener('htmx:afterSwap', function (event) {

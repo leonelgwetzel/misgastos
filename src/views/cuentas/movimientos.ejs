@@ -1,7 +1,7 @@
 <p class="config-crumb"><a href="/configuracion">Configuración</a> · <a href="/cuentas">Cuentas</a> · <%= cuenta.nombre %></p>
 <div class="page-heading">
   <h1><%= cuenta.nombre %></h1>
-  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-mov', listHref: '/cuentas/' + cuenta.id + '/movimientos', btnLabel: 'Nuevo' }) %>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-mov', listHref: '/cuentas/' + cuenta.id + '/movimientos', icon: 'fa-arrow-right-arrow-left', ariaLabel: 'Nuevo movimiento' }) %>
 </div>
 <p class="hint">Saldo actual: <strong><%= cuenta.divisa.simbolo %> <%= Number(cuenta.saldoActual).toLocaleString('es-AR') %></strong></p>
 

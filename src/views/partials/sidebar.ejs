@@ -1,14 +1,13 @@
 <%
   var path = typeof currentPath !== 'undefined' ? currentPath : '/';
-  var isDash = path.startsWith('/dashboard');
   var isInicio = path === '/';
-  var isMov = path.startsWith('/movimientos') || (path.startsWith('/ingresos') && !path.startsWith('/ingresos-fijos')) || (path.startsWith('/gastos') && !path.startsWith('/gastos-fijos'));
-  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/gastos-fijos') || path.startsWith('/ingresos-fijos') || path.startsWith('/categorias') || path.startsWith('/usuarios');
+  var isMov = path.startsWith('/movimientos') || path.startsWith('/ingresos') || path.startsWith('/gastos');
+  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/categorias') || path.startsWith('/usuarios');
 %>
 <div class="rail-stack">
   <aside class="rail" aria-label="Navegación">
     <div class="rail-brand">
-      <a href="/dashboard" title="misgastos">
+      <a href="/" title="misgastos">
         <img class="rail-brand-mark" src="/img/logo-mark.png" width="32" height="32" alt="">
         <span class="rail-label">misgastos</span>
       </a>
@@ -25,13 +24,9 @@
 
     <nav class="rail-nav">
       <p class="rail-section">Trabajo</p>
-      <a href="/dashboard" class="rail-link<%= isDash ? ' is-active' : '' %>" title="Dashboard">
+      <a href="/" class="rail-link<%= isInicio ? ' is-active' : '' %>" title="Dashboard">
         <span class="rail-ico" aria-hidden="true"><i class="fa-solid fa-chart-pie"></i></span>
         <span class="rail-label">Dashboard</span>
-      </a>
-      <a href="/" class="rail-link<%= isInicio ? ' is-active' : '' %>" title="Mes">
-        <span class="rail-ico" aria-hidden="true"><i class="fa-solid fa-calendar-days"></i></span>
-        <span class="rail-label">Mes</span>
       </a>
       <a href="/gastos" class="rail-link<%= isMov ? ' is-active' : '' %>" title="Movimientos">
         <span class="rail-ico" aria-hidden="true"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>

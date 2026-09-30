@@ -31,6 +31,7 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-dev-secret-change-in-production}
       NODE_ENV: development
       PORT: 3000
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TZ: America/Argentina/Buenos_Aires
     depends_on:
       db:

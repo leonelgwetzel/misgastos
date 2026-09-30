@@ -1,16 +1,29 @@
 <%
   var label = typeof btnLabel !== 'undefined' ? btnLabel : 'Nuevo';
+  var icon = typeof icon !== 'undefined' ? icon : '';
+  var aria = typeof ariaLabel !== 'undefined' ? ariaLabel : label;
   var base = typeof listHref !== 'undefined' ? listHref : '#';
   var isEditing = typeof editing !== 'undefined' && editing;
+  var mark = icon ? ' is-mark' : '';
 %>
 <% if (isEditing) { %>
-  <a href="<%= base %>#form" class="btn-nuevo">
-    <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
-    <span><%= label %></span>
+  <a href="<%= base %>#form" class="btn-nuevo<%= mark %>" aria-label="<%= aria %>">
+    <% if (icon) { %>
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <i class="fa-solid <%= icon %>" aria-hidden="true"></i>
+    <% } else { %>
+      <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+      <span><%= label %></span>
+    <% } %>
   </a>
 <% } else { %>
-  <button type="button" class="btn-nuevo" onclick="document.getElementById('<%= dialogId %>').showModal()">
-    <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
-    <span><%= label %></span>
+  <button type="button" class="btn-nuevo<%= mark %>" onclick="document.getElementById('<%= dialogId %>').showModal()" aria-label="<%= aria %>">
+    <% if (icon) { %>
+      <i class="fa-solid fa-plus" aria-hidden="true"></i>
+      <i class="fa-solid <%= icon %>" aria-hidden="true"></i>
+    <% } else { %>
+      <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
+      <span><%= label %></span>
+    <% } %>
   </button>
 <% } %>

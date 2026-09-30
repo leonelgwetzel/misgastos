@@ -1,7 +1,7 @@
 <p class="config-crumb"><a href="/configuracion">Configuración</a> · Categorías</p>
 <div class="page-heading">
   <h1>Categorías</h1>
-  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-cat', listHref: '/categorias', editing: editing }) %>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-cat', listHref: '/categorias', editing: editing, icon: 'fa-tags', ariaLabel: 'Nueva categoría' }) %>
 </div>
 
 <% if (success) { %>
@@ -24,48 +24,39 @@
     <% if (categorias.length === 0) { %>
       <p class="hint">Todavía no tenés categorías. <a href="#form" onclick="document.getElementById('capture-cat').showModal(); return false;">Creá la primera</a>.</p>
     <% } else { %>
-      <div class="table-wrap dt-wrap">
-        <table class="dt">
-          <thead>
-            <tr>
-              <th><i class="fa-solid fa-tag" aria-hidden="true"></i> Nombre</th>
-              <th class="col-num">Usos</th>
-              <th class="col-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% categorias.forEach(function(c) { %>
-              <tr>
-                <td class="col-desc" data-label="Nombre">
-                  <span class="cat-cell">
-                    <%- include('../partials/_chip-categoria', {
-                      nombre: c.nombre,
-                      color: c.color,
-                      icono: c.icono,
-                      soloIcono: true
-                    }) %>
-                    <strong><%= c.nombre %></strong>
-                    <% if (c.esSistema) { %> <span class="hint">· inicial</span><% } %>
-                  </span>
-                </td>
-                <td class="col-num" data-label="Usos"><%= c.usos %></td>
-                <td class="col-actions" data-label="Acciones">
-                  <div class="dt-actions">
-                    <a href="/categorias?edit=<%= c.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
-                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
-                    </a>
-                    <form method="post" action="/categorias/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar “<%= c.nombre %>”? Los gastos e ingresos quedan sin categoría.')">
-                      <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
-                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
+      <ul class="cfg-cards">
+        <% categorias.forEach(function(c) { %>
+          <li class="cfg-card">
+            <div class="cfg-card-head">
+              <h3 class="cfg-card-title">
+                <span class="cat-cell">
+                  <%- include('../partials/_chip-categoria', {
+                    nombre: c.nombre,
+                    color: c.color,
+                    icono: c.icono,
+                    soloIcono: true
+                  }) %>
+                  <%= c.nombre %>
+                </span>
+              </h3>
+              <span class="cfg-card-value"><%= c.usos %></span>
+            </div>
+            <% if (c.esSistema) { %><p class="cfg-card-meta"><span>Inicial</span></p><% } %>
+            <div class="cfg-card-foot">
+              <div class="dt-actions">
+                <a href="/categorias?edit=<%= c.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                  <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                </a>
+                <form method="post" action="/categorias/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar “<%= c.nombre %>”? Los gastos e ingresos quedan sin categoría.')">
+                  <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
     <% } %>
   </article>
 </section>

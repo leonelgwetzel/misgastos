@@ -1,0 +1,86 @@
+<%
+  const puntos = (typeof serie !== 'undefined' && serie) ? serie : [];
+  const W = 720;
+  const H = 340;
+  const padX = 28;
+  const padTop = 18;
+  const padBottom = 156;
+  const chartW = W - padX * 2;
+  const chartH = H - padTop - padBottom;
+  const maxG = puntos.length
+    ? Math.max.apply(null, puntos.map(function(p) { return Number(p.gastos) || 0; }).concat([1]))
+    : 1;
+
+  function compacto(amount) {
+    const num = Number(amount) || 0;
+    const abs = Math.abs(num);
+    if (abs >= 1000000) {
+      const v = Math.round((abs / 1000000) * 10) / 10;
+      return (num < 0 ? '-' : '') + '$ ' + String(v).replace('.', ',') + 'M';
+    }
+    if (abs >= 1000) {
+      return (num < 0 ? '-' : '') + '$ ' + Math.round(abs / 1000) + 'k';
+    }
+    return (num < 0 ? '-' : '') + '$ ' + Math.round(abs);
+  }
+
+  const coords = puntos.map(function(p, i) {
+    const x = padX + (puntos.length <= 1 ? chartW / 2 : (i / (puntos.length - 1)) * chartW);
+    const y = padTop + chartH - ((Number(p.gastos) || 0) / maxG) * chartH;
+    const name = String(p.label || '');
+    return Object.assign({}, p, {
+      x: x,
+      y: y,
+      corto: name.slice(0, 3),
+      montoCorto: compacto(p.gastos),
+      drop: i % 2 === 1,
+    });
+  });
+  const linePath = coords.map(function(c, i) {
+    return (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1);
+  }).join(' ');
+  const baseY = padTop + chartH;
+  const areaPath = coords.length
+    ? linePath
+      + ' L' + coords[coords.length - 1].x.toFixed(1) + ',' + baseY.toFixed(1)
+      + ' L' + coords[0].x.toFixed(1) + ',' + baseY.toFixed(1)
+      + ' Z'
+    : '';
+%>
+<% if (coords.length > 0) { %>
+  <div class="year-line" role="img" aria-label="<%= typeof ariaLabel !== 'undefined' ? ariaLabel : 'Resumen del año' %>">
+    <div class="year-line-stage">
+      <svg class="year-line-svg" viewBox="0 0 <%= W %> <%= H %>" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="year-line-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="currentColor" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="currentColor" stop-opacity="0.02"/>
+          </linearGradient>
+        </defs>
+        <% for (var g = 0; g <= 2; g++) {
+          const gy = padTop + (chartH / 2) * g;
+        %>
+          <line class="evo-grid-line" x1="<%= padX %>" y1="<%= gy %>" x2="<%= W - padX %>" y2="<%= gy %>"/>
+        <% } %>
+        <% if (coords.length > 1) { %>
+          <path class="evo-area" d="<%= areaPath %>" fill="url(#year-line-fill)"/>
+          <path class="evo-line" d="<%= linePath %>" fill="none"/>
+        <% } %>
+        <% coords.forEach(function(c) { %>
+          <circle class="year-line-dot<%= c.actual ? ' is-actual' : '' %>" cx="<%= c.x.toFixed(1) %>" cy="<%= c.y.toFixed(1) %>" r="<%= c.actual ? 5 : 3.5 %>"/>
+        <% }); %>
+      </svg>
+      <% coords.forEach(function(c) { %>
+        <a class="year-badge<%= c.actual ? ' is-actual' : '' %><%= c.drop ? ' is-drop' : '' %>"
+          href="<%= c.href || '#' %>"
+          style="left: <%= (c.x / W * 100).toFixed(2) %>%; top: <%= (c.y / H * 100).toFixed(2) %>%;"
+          title="<%= c.label %> · <%= c.formateado %>">
+          <span class="year-badge-name"><%= c.corto %></span>
+          <span class="year-badge-amt"><%= c.montoCorto %></span>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+<% } else { %>
+  <p class="hint"><%= typeof emptyHint !== 'undefined' ? emptyHint : 'Sin datos del año.' %></p>
+<% } %>

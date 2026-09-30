@@ -9,7 +9,7 @@
   const enVerde = resultado >= 0;
 %>
 <div class="month-shell month-shell-unified">
-  <div class="month-bar" id="sec-resumen" x-data="{ regOpen: false }">
+  <div class="month-bar" id="sec-resumen">
     <div class="month-bar-row">
       <div class="month-bar-start">
         <nav class="month-nav" aria-label="Navegación mensual">
@@ -58,18 +58,6 @@
         </div>
       </div>
 
-      <div class="month-bar-actions">
-        <div class="reg-wrap">
-          <button type="button" class="btn-nuevo" @click="regOpen = !regOpen" aria-label="Nuevo">
-            <span class="btn-nuevo-ico"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
-            <span>Nuevo</span>
-          </button>
-          <div class="reg-menu" x-show="regOpen" @click.outside="regOpen = false" x-cloak>
-            <a href="/gastos#nuevo" @click="regOpen = false"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i> Gasto</a>
-            <a href="/ingresos#nuevo" @click="regOpen = false"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i> Ingreso</a>
-          </div>
-        </div>
-      </div>
     </div>
 
     <div class="month-snap-track" aria-hidden="true">
@@ -82,13 +70,14 @@
     <a href="#sec-comparacion" class="month-secnav-link month-secnav-parent"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i><span>Análisis</span></a>
     <a href="#sec-ingresos" class="month-secnav-link"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Ingresos</span></a>
     <a href="#sec-egresos" class="month-secnav-link"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Egresos</span></a>
-    <a href="#sec-pendiente" class="month-secnav-link"><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Pendiente</span></a>
-    <a href="#sec-cuotas" class="month-secnav-link"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Cuotas</span></a>
+    <a href="#sec-pendiente" class="month-secnav-link"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i><span>Pendiente</span></a>
+    <a href="#sec-cuotas" class="month-secnav-link"><i class="fa-solid fa-list-ol" aria-hidden="true"></i><span>Cuotas</span></a>
   </nav>
   <nav class="month-secnav month-secnav-mobile month-secnav-charts" aria-label="Gráficos de análisis">
     <a href="#sec-comparacion" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-chart-line" aria-hidden="true"></i><span>Comparación</span></a>
-    <a href="#sec-categorias" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i><span>Categoría</span></a>
-    <a href="#sec-compromisos" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-file-invoice" aria-hidden="true"></i><span>Compromisos</span></a>
+    <a href="#sec-anio" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i><span>Año</span></a>
+    <a href="#sec-categorias" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Categoría</span></a>
+    <a href="#sec-compromisos" class="month-secnav-link month-secnav-chart"><i class="fa-solid fa-file-contract" aria-hidden="true"></i><span>Compromisos</span></a>
   </nav>
 
   <div class="month-layout">
@@ -97,14 +86,15 @@
         <a href="#sec-comparacion" class="month-sidenav-link month-sidenav-parent"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i><span>Análisis</span></a>
         <div class="month-sidenav-sub">
           <a href="#sec-comparacion" class="month-sidenav-sublink">Comparación meses</a>
+          <a href="#sec-anio" class="month-sidenav-sublink">Año</a>
           <a href="#sec-categorias" class="month-sidenav-sublink">Por categoría</a>
           <a href="#sec-compromisos" class="month-sidenav-sublink">Compromisos</a>
         </div>
       </div>
       <a href="#sec-ingresos" class="month-sidenav-link"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Ingresos</span></a>
       <a href="#sec-egresos" class="month-sidenav-link"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Egresos</span></a>
-      <a href="#sec-pendiente" class="month-sidenav-link"><i class="fa-solid fa-clock" aria-hidden="true"></i><span>Pendiente</span></a>
-      <a href="#sec-cuotas" class="month-sidenav-link"><i class="fa-solid fa-layer-group" aria-hidden="true"></i><span>Cuotas</span></a>
+      <a href="#sec-pendiente" class="month-sidenav-link"><i class="fa-solid fa-hourglass-half" aria-hidden="true"></i><span>Pendiente</span></a>
+      <a href="#sec-cuotas" class="month-sidenav-link"><i class="fa-solid fa-list-ol" aria-hidden="true"></i><span>Cuotas</span></a>
     </nav>
     <div id="tab-content">
       <%- include('tab-content') %>

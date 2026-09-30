@@ -1,0 +1,149 @@
+<%
+  const slices = (typeof datos !== 'undefined' && datos) ? datos : [];
+  const VB_W = 560;
+  const VB_H = 320;
+  const cx = 280;
+  const cy = 148;
+  const rx = 78;
+  const ry = 44;
+  const depth = 16;
+
+  function polar(angleDeg, radiusX, radiusY, originY) {
+    const rad = ((angleDeg - 90) * Math.PI) / 180;
+    return {
+      x: cx + radiusX * Math.cos(rad),
+      y: (originY == null ? cy : originY) + radiusY * Math.sin(rad),
+    };
+  }
+
+  function hexOf(color) {
+    const raw = String(color || '').trim();
+    return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(raw) ? raw : '#6d8f84';
+  }
+
+  function channels(hex) {
+    const raw = hex.replace('#', '');
+    const full = raw.length === 3
+      ? raw.split('').map(function(ch) { return ch + ch; }).join('')
+      : raw.padEnd(6, '0').slice(0, 6);
+    return [0, 2, 4].map(function(i) { return parseInt(full.slice(i, i + 2), 16); });
+  }
+
+  function mix(hex, toward, t) {
+    const a = channels(hexOf(hex));
+    const b = channels(toward);
+    const out = a.map(function(v, i) {
+      return Math.max(0, Math.min(255, Math.round(v * (1 - t) + b[i] * t))).toString(16).padStart(2, '0');
+    });
+    return '#' + out.join('');
+  }
+
+  const drawn = slices.map(function(slice) {
+    const start = (Number(slice.startPct) || 0) * 3.6;
+    let sweep = ((Number(slice.endPct) || 0) - (Number(slice.startPct) || 0)) * 3.6;
+    if (sweep >= 359.99) sweep = 359.99;
+    const end = start + sweep;
+    const large = sweep > 180 ? 1 : 0;
+    const topA = polar(start, rx, ry);
+    const topB = polar(end, rx, ry);
+    const top = 'M ' + cx + ' ' + cy
+      + ' L ' + topA.x.toFixed(2) + ' ' + topA.y.toFixed(2)
+      + ' A ' + rx + ' ' + ry + ' 0 ' + large + ' 1 ' + topB.x.toFixed(2) + ' ' + topB.y.toFixed(2)
+      + ' Z';
+    const frontLo = Math.max(start, 90);
+    const frontHi = Math.min(end, 270);
+    let side = '';
+    let sideMid = 180;
+    if (frontHi - frontLo > 0.4) {
+      const sA = polar(frontLo, rx, ry);
+      const sB = polar(frontHi, rx, ry);
+      const sBotA = polar(frontLo, rx, ry, cy + depth);
+      const sBotB = polar(frontHi, rx, ry, cy + depth);
+      const sLarge = (frontHi - frontLo) > 180 ? 1 : 0;
+      side = 'M ' + sA.x.toFixed(2) + ' ' + sA.y.toFixed(2)
+        + ' A ' + rx + ' ' + ry + ' 0 ' + sLarge + ' 1 ' + sB.x.toFixed(2) + ' ' + sB.y.toFixed(2)
+        + ' L ' + sBotB.x.toFixed(2) + ' ' + sBotB.y.toFixed(2)
+        + ' A ' + rx + ' ' + ry + ' 0 ' + sLarge + ' 0 ' + sBotA.x.toFixed(2) + ' ' + sBotA.y.toFixed(2)
+        + ' Z';
+      sideMid = (frontLo + frontHi) / 2;
+    }
+    const mid = start + sweep / 2;
+    const rim = polar(mid, rx + 4, ry + 3);
+    const label = polar(mid, rx + 86, ry + 58);
+    const color = hexOf(slice.color);
+    const pct = Number(slice.pct) || 0;
+    return {
+      alias: slice.alias || slice.nombre || '',
+      pct: pct,
+      totalFormateado: slice.totalFormateado || '',
+      color: color,
+      pastel: mix(color, '#ffffff', 0.7),
+      ink: mix(color, '#12151c', 0.78),
+      edge: mix(color, '#ffffff', 0.42),
+      sideColor: mix(color, '#000000', 0.28),
+      top: top,
+      side: side,
+      sideMid: sideMid,
+      prefer: (slices.length >= 7 && pct < 8) ? 'pct' : 'full',
+      lx: (label.x / VB_W) * 100,
+      ly: (label.y / VB_H) * 100,
+      rx0: rim.x,
+      ry0: rim.y,
+      lxSvg: label.x,
+      lySvg: label.y,
+    };
+  });
+  const sides = drawn.filter(function(slice) { return slice.side; })
+    .slice()
+    .sort(function(a, b) { return Math.abs(b.sideMid - 180) - Math.abs(a.sideMid - 180); });
+%>
+<% if (drawn.length > 0) { %>
+  <div class="pie3d" x-data="pie3dCallouts()" x-init="boot()">
+    <div class="pie3d-stage">
+      <svg class="pie3d-svg" viewBox="0 0 <%= VB_W %> <%= VB_H %>" preserveAspectRatio="xMidYMid meet" role="img" aria-label="<%= typeof ariaLabel !== 'undefined' ? ariaLabel : 'Gastos por categoría' %>">
+        <% sides.forEach(function(slice) { %>
+          <path d="<%= slice.side %>" fill="<%= slice.sideColor %>"/>
+        <% }); %>
+        <% drawn.forEach(function(slice) { %>
+          <path d="<%= slice.top %>" fill="<%= slice.color %>">
+            <title><%= slice.alias %> · <%= slice.totalFormateado %> · <%= slice.pct %>%</title>
+          </path>
+        <% }); %>
+        <% drawn.forEach(function(slice) { %>
+          <line class="pie3d-leader" x1="<%= slice.rx0.toFixed(1) %>" y1="<%= slice.ry0.toFixed(1) %>" x2="<%= slice.lxSvg.toFixed(1) %>" y2="<%= slice.lySvg.toFixed(1) %>" stroke="<%= slice.color %>"/>
+        <% }); %>
+      </svg>
+      <% drawn.forEach(function(slice) { %>
+        <button type="button" class="pie3d-chip" data-pie-chip
+          data-mode="<%= slice.prefer %>" data-prefer="<%= slice.prefer %>"
+          data-alias="<%= slice.alias %>" data-pct="<%= slice.pct %>" data-total="<%= slice.totalFormateado %>"
+          data-pastel="<%= slice.pastel %>" data-ink="<%= slice.ink %>"
+          style="left: <%= slice.lx.toFixed(2) %>%; top: <%= slice.ly.toFixed(2) %>%; --chip-bg: <%= slice.pastel %>; --chip-ink: <%= slice.ink %>; --chip-edge: <%= slice.edge %>;"
+          aria-label="<%= slice.alias %>, <%= slice.pct %> por ciento, <%= slice.totalFormateado %>"
+          @click="open($event)">
+          <span class="pie3d-chip-full">
+            <span class="pie3d-chip-name"><%= slice.alias %></span>
+            <span class="pie3d-chip-pct"><%= slice.pct %>%</span>
+            <span class="pie3d-chip-amt"><%= slice.totalFormateado %></span>
+          </span>
+          <span class="pie3d-chip-pctonly"><%= slice.pct %>%</span>
+        </button>
+      <% }); %>
+    </div>
+    <dialog class="pie3d-pop" x-ref="pop" @click="if ($event.target === $event.currentTarget) close()">
+      <div class="pie3d-pop-card" :style="detail ? ('background:' + detail.pastel + ';color:' + detail.ink) : ''">
+        <button type="button" class="pie3d-pop-close" @click="close()" aria-label="Cerrar">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+        <p class="pie3d-pop-name" x-text="detail ? detail.alias : ''"></p>
+        <p class="pie3d-pop-pct" x-text="detail ? (detail.pct + '%') : ''"></p>
+        <p class="pie3d-pop-amt" x-text="detail ? detail.total : ''"></p>
+      </div>
+    </dialog>
+  </div>
+<% } else { %>
+  <div class="pie-chart-empty">
+    <i class="fa-solid fa-chart-pie pie-chart-empty-ico" aria-hidden="true"></i>
+    <p class="hint"><%= typeof emptyHint !== 'undefined' ? emptyHint : 'Sin datos para segmentar.' %></p>
+  </div>
+<% } %>

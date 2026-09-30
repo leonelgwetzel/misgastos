@@ -1,7 +1,7 @@
 <p class="config-crumb"><a href="/configuracion">Configuración</a> · Usuarios</p>
 <div class="page-heading">
   <h1>Usuarios</h1>
-  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-usuario', listHref: '/usuarios', editing: editing }) %>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-usuario', listHref: '/usuarios', editing: editing, icon: 'fa-users', ariaLabel: 'Nuevo usuario' }) %>
 </div>
 
 <%
@@ -25,77 +25,64 @@
     <% if (usuarios.length === 0) { %>
       <p class="hint">Todavía no hay usuarios. <a href="#form" onclick="document.getElementById('capture-usuario').showModal(); return false;">Creá el primero</a>.</p>
     <% } else { %>
-      <div class="table-wrap dt-wrap">
-        <table class="dt">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Email</th>
-              <th>Perfil</th>
-              <th>Estado</th>
-              <th class="col-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% usuarios.forEach(function(u) { %>
-              <tr>
-                <td class="col-desc" data-label="Nombre"><strong><%= u.nombre %></strong></td>
-                <td data-label="Email"><%= u.email %></td>
-                <td data-label="Perfil">
-                  <span class="badge<%= u.perfil === 'admin' ? ' is-fijo' : '' %>"><%= u.perfil === 'admin' ? 'Admin' : 'Cliente' %></span>
-                </td>
-                <td data-label="Estado">
-                  <% if (u.habilitado) { %>
-                    <span class="badge is-ok">Habilitado</span>
-                  <% } else { %>
-                    <span class="badge is-proyectado">Pendiente</span>
-                  <% } %>
-                </td>
-                <td class="col-actions" data-label="Acciones">
-                  <div class="dt-actions">
-                    <% if (!u.habilitado) { %>
-                      <form method="post" action="/usuarios/<%= u.id %>/habilitar">
-                        <button type="submit" class="dt-ico-btn is-hist" title="Habilitar acceso" aria-label="Habilitar acceso">
-                          <i class="fa-solid fa-check" aria-hidden="true"></i>
-                        </button>
-                      </form>
-                    <% } else if (u.id !== actorId) { %>
-                      <form
-                        method="post"
-                        action="/usuarios/<%= u.id %>/deshabilitar"
-                        data-swal-title="Deshabilitar acceso"
-                        data-swal-text="Se va a pausar el acceso de <%= u.nombre %>."
-                        data-swal-confirm="Deshabilitar"
-                        data-swal-icon="warning">
-                        <button type="submit" class="dt-ico-btn is-more" title="Deshabilitar acceso" aria-label="Deshabilitar acceso">
-                          <i class="fa-solid fa-pause" aria-hidden="true"></i>
-                        </button>
-                      </form>
-                    <% } %>
-                    <a href="/usuarios?edit=<%= u.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
-                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
-                    </a>
-                    <% if (!u.habilitado && u.id !== actorId) { %>
-                      <form
-                        method="post"
-                        action="/usuarios/<%= u.id %>/eliminar"
-                        data-swal-title="Eliminar solicitud"
-                        data-swal-text="Se borra la solicitud de <%= u.nombre %>. No se puede deshacer."
-                        data-swal-confirm="Eliminar"
-                        data-swal-icon="warning"
-                        data-swal-danger>
-                        <button type="submit" class="dt-ico-btn is-del" title="Eliminar solicitud" aria-label="Eliminar solicitud">
-                          <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                        </button>
-                      </form>
-                    <% } %>
-                  </div>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
+      <ul class="cfg-cards">
+        <% usuarios.forEach(function(u) { %>
+          <li class="cfg-card">
+            <div class="cfg-card-head">
+              <h3 class="cfg-card-title"><%= u.nombre %></h3>
+            </div>
+            <p class="cfg-card-meta">
+              <span><%= u.email %></span>
+              <span class="badge<%= u.perfil === 'admin' ? ' is-fijo' : '' %>"><%= u.perfil === 'admin' ? 'Admin' : 'Cliente' %></span>
+              <% if (u.habilitado) { %>
+                <span class="badge is-ok">Habilitado</span>
+              <% } else { %>
+                <span class="badge is-proyectado">Pendiente</span>
+              <% } %>
+            </p>
+            <div class="cfg-card-foot">
+              <div class="dt-actions">
+                <% if (!u.habilitado) { %>
+                  <form method="post" action="/usuarios/<%= u.id %>/habilitar">
+                    <button type="submit" class="dt-ico-btn is-hist" title="Habilitar acceso" aria-label="Habilitar acceso">
+                      <i class="fa-solid fa-check" aria-hidden="true"></i>
+                    </button>
+                  </form>
+                <% } else if (u.id !== actorId) { %>
+                  <form
+                    method="post"
+                    action="/usuarios/<%= u.id %>/deshabilitar"
+                    data-swal-title="Deshabilitar acceso"
+                    data-swal-text="Se va a pausar el acceso de <%= u.nombre %>."
+                    data-swal-confirm="Deshabilitar"
+                    data-swal-icon="warning">
+                    <button type="submit" class="dt-ico-btn is-more" title="Deshabilitar acceso" aria-label="Deshabilitar acceso">
+                      <i class="fa-solid fa-pause" aria-hidden="true"></i>
+                    </button>
+                  </form>
+                <% } %>
+                <a href="/usuarios?edit=<%= u.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                  <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                </a>
+                <% if (!u.habilitado && u.id !== actorId) { %>
+                  <form
+                    method="post"
+                    action="/usuarios/<%= u.id %>/eliminar"
+                    data-swal-title="Eliminar solicitud"
+                    data-swal-text="Se borra la solicitud de <%= u.nombre %>. No se puede deshacer."
+                    data-swal-confirm="Eliminar"
+                    data-swal-icon="warning"
+                    data-swal-danger>
+                    <button type="submit" class="dt-ico-btn is-del" title="Eliminar solicitud" aria-label="Eliminar solicitud">
+                      <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                    </button>
+                  </form>
+                <% } %>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
     <% } %>
   </article>
 </section>

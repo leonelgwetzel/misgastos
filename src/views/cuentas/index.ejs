@@ -1,7 +1,7 @@
 <p class="config-crumb"><a href="/configuracion">Configuración</a> · Cuentas</p>
 <div class="page-heading">
   <h1>Cuentas</h1>
-  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-cuenta', listHref: '/cuentas', editing: editing }) %>
+  <%- include('../partials/_cfg-nuevo', { dialogId: 'capture-cuenta', listHref: '/cuentas', editing: editing, icon: 'fa-building-columns', ariaLabel: 'Nueva cuenta' }) %>
 </div>
 
 <% if (success) { %>
@@ -24,44 +24,35 @@
     <% if (cuentas.length === 0) { %>
       <p class="hint">Todavía no tenés cuentas cargadas. <a href="#form" onclick="document.getElementById('capture-cuenta').showModal(); return false;">Creá la primera</a>.</p>
     <% } else { %>
-      <div class="table-wrap dt-wrap">
-        <table class="dt">
-          <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>Tipo</th>
-              <th>Divisa</th>
-              <th class="col-num">Saldo</th>
-              <th class="col-actions">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% cuentas.forEach(function(c) { %>
-              <tr>
-                <td class="col-desc" data-label="Nombre"><a href="/cuentas/<%= c.id %>/movimientos" class="item-title"><%= c.nombre %></a></td>
-                <td data-label="Tipo"><%= c.tipo.toLowerCase() %></td>
-                <td data-label="Divisa"><%= c.divisa.codigo %></td>
-                <td class="col-num" data-label="Saldo"><%= c.divisa.simbolo %> <%= Number(c.saldoActual).toLocaleString('es-AR') %></td>
-                <td class="col-actions" data-label="Acciones">
-                  <div class="dt-actions">
-                    <a href="/cuentas?edit=<%= c.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
-                      <i class="fa-solid fa-pencil" aria-hidden="true"></i>
-                    </a>
-                    <a href="/cuentas/<%= c.id %>/movimientos" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial">
-                      <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                    </a>
-                    <form method="post" action="/cuentas/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar cuenta?')">
-                      <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
-                        <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
-              </tr>
-            <% }); %>
-          </tbody>
-        </table>
-      </div>
+      <ul class="cfg-cards">
+        <% cuentas.forEach(function(c) { %>
+          <li class="cfg-card">
+            <div class="cfg-card-head">
+              <h3 class="cfg-card-title"><a href="/cuentas/<%= c.id %>/movimientos"><%= c.nombre %></a></h3>
+              <span class="cfg-card-value"><%= c.divisa.simbolo %> <%= Number(c.saldoActual).toLocaleString('es-AR') %></span>
+            </div>
+            <p class="cfg-card-meta">
+              <span><%= c.tipo.toLowerCase() %></span>
+              <span><%= c.divisa.codigo %></span>
+            </p>
+            <div class="cfg-card-foot">
+              <div class="dt-actions">
+                <a href="/cuentas?edit=<%= c.id %>#form" class="dt-ico-btn is-edit" title="Editar" aria-label="Editar">
+                  <i class="fa-solid fa-pencil" aria-hidden="true"></i>
+                </a>
+                <a href="/cuentas/<%= c.id %>/movimientos" class="dt-ico-btn is-hist" title="Historial" aria-label="Historial">
+                  <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                </a>
+                <form method="post" action="/cuentas/<%= c.id %>/eliminar" onsubmit="return confirm('¿Eliminar cuenta?')">
+                  <button type="submit" class="dt-ico-btn is-del" title="Eliminar" aria-label="Eliminar">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </li>
+        <% }); %>
+      </ul>
     <% } %>
   </article>
 </section>

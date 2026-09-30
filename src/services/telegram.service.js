@@ -1,6 +1,40 @@
 const crypto = require('crypto');
 const prisma = require('../lib/prisma');
 
+let botUsernameCache = null;
+
+function usernameDesdeEnv() {
+  return String(process.env.TELEGRAM_BOT_USERNAME || '').trim().replace(/^@/, '');
+}
+
+/** Usuario público del bot, para armar https://t.me/…. */
+async function getBotUsername() {
+  const desdeEnv = usernameDesdeEnv();
+  if (desdeEnv) return desdeEnv;
+  if (botUsernameCache) return botUsernameCache;
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) return null;
+
+  try {
+    const respuesta = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+    const data = await respuesta.json();
+    const username = data && data.ok && data.result ? data.result.username : '';
+    if (!username) return null;
+    botUsernameCache = username;
+    return username;
+  } catch (err) {
+    return null;
+  }
+}
+
+function urlDelBot(username, codigo) {
+  if (!username) return null;
+  const base = `https://t.me/${username}`;
+  const limpio = normalizarCodigo(codigo);
+  if (limpio.length !== CODIGO_LENGTH) return base;
+  return `${base}?start=${limpio}`;
+}
+
 const CODIGO_LENGTH = 6;
 const CODIGO_TTL_MINUTOS = 15;
 /** Sin I, O, 0 ni 1 para que el código sea fácil de tipear en el celular. */
@@ -130,10 +164,13 @@ async function getEstado(userId) {
     }
     : null;
 
+  const username = await getBotUsername();
+
   return {
     activos,
     pendiente,
-    botUsername: process.env.TELEGRAM_BOT_USERNAME || null,
+    botUsername: username,
+    botUrl: urlDelBot(username, pendiente && pendiente.codigo),
     configurado: Boolean(process.env.TELEGRAM_BOT_TOKEN),
   };
 }
@@ -145,5 +182,7 @@ module.exports = {
   resolverUsuario,
   desvincularPorChat,
   desvincularPorId,
+  getBotUsername,
+  urlDelBot,
   getEstado,
 };

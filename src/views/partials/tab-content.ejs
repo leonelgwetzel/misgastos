@@ -62,9 +62,35 @@
       }) %>
     </section>
 
+    <section class="mv-card mv-section month-pane" id="sec-anio">
+      <% var calAnio = (typeof calendario !== 'undefined' && calendario) ? calendario : null; %>
+      <div class="mv-section-head">
+        <h4 class="mv-section-title"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Año <%= calAnio ? calAnio.year : '' %></h4>
+        <span class="mv-section-total">
+          <span class="mv-section-total-label">Total</span>
+          <span class="mv-section-total-value amount"><%= calAnio && calAnio.totalFormateado ? calAnio.totalFormateado : '—' %></span>
+        </span>
+      </div>
+      <%
+        var yearSerie = (calAnio && calAnio.months) ? calAnio.months.map(function(m) {
+          return {
+            label: m.label,
+            gastos: m.total,
+            formateado: m.totalFormateado,
+            href: m.href,
+            actual: (typeof month !== 'undefined' && month) ? m.key === month.key : false,
+          };
+        }) : [];
+      %>
+      <%- include('_chart-year-line', {
+        serie: yearSerie,
+        ariaLabel: 'Gastos fijos y tarjetas del año'
+      }) %>
+    </section>
+
     <section class="mv-card mv-section month-pane" id="sec-categorias" x-data="{ filtro: 'todos' }">
       <div class="mv-section-head">
-        <h4 class="mv-section-title"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i> Por categoría</h4>
+        <h4 class="mv-section-title"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Por categoría</h4>
       </div>
       <div class="pie-filters" role="tablist" aria-label="Filtrar gastos del gráfico">
         <button type="button" role="tab" class="pie-filter-btn"
@@ -81,16 +107,16 @@
           @click="filtro = 'variables'">Otros</button>
       </div>
       <div class="cat-filter-pane" x-show="filtro === 'todos'">
-        <%- include('_chart-candles-body', { datos: pieTodos, ariaLabel: 'Gastos por categoría' }) %>
+        <%- include('_chart-pie3d', { datos: pieTodos, ariaLabel: 'Gastos por categoría' }) %>
       </div>
       <div class="cat-filter-pane" x-show="filtro === 'fijos'" x-cloak>
-        <%- include('_chart-candles-body', { datos: pieFijos, ariaLabel: 'Gastos fijos', emptyHint: 'Sin gastos fijos este mes.' }) %>
+        <%- include('_chart-pie3d', { datos: pieFijos, ariaLabel: 'Gastos fijos', emptyHint: 'Sin gastos fijos este mes.' }) %>
       </div>
       <div class="cat-filter-pane" x-show="filtro === 'tarjeta'" x-cloak>
-        <%- include('_chart-candles-body', { datos: pieTarjeta, ariaLabel: 'Gastos de tarjeta', emptyHint: 'Sin gastos de tarjeta este mes.' }) %>
+        <%- include('_chart-pie3d', { datos: pieTarjeta, ariaLabel: 'Gastos de tarjeta', emptyHint: 'Sin gastos de tarjeta este mes.' }) %>
       </div>
       <div class="cat-filter-pane" x-show="filtro === 'variables'" x-cloak>
-        <%- include('_chart-candles-body', { datos: pieVariables, ariaLabel: 'Otros gastos', emptyHint: 'Sin gastos variables este mes.' }) %>
+        <%- include('_chart-pie3d', { datos: pieVariables, ariaLabel: 'Otros gastos', emptyHint: 'Sin gastos variables este mes.' }) %>
       </div>
     </section>
 
@@ -107,28 +133,8 @@
       <p class="mv-section-note">Cuotas del mes más lo pendiente de facturar.</p>
 
       <% if (vistaCompromisos && vistaCompromisos.porTarjeta && vistaCompromisos.porTarjeta.length > 0) { %>
-        <%
-          const cmpMaxMonto = Math.max.apply(null, vistaCompromisos.porTarjeta.map(function(t) {
-            return Number(t.total) || 0;
-          }).concat([1]));
-          const cmpVelas = vistaCompromisos.porTarjeta.map(function(t) {
-            const monto = Number(t.total) || 0;
-            return {
-              alias: t.alias,
-              color: t.color,
-              icono: 'fa-credit-card',
-              total: monto,
-              totalFormateado: t.totalFormateado,
-              pct: Math.round((Number(t.pct) || 0) * 10) / 10,
-              pctDelMayor: Math.round((monto / cmpMaxMonto) * 1000) / 10,
-            };
-          });
-          cmpVelas.totalFormateado = vistaCompromisos.totalFormateado;
-        %>
-        <%- include('_chart-candles-body', {
-          datos: cmpVelas,
-          hideHead: true,
-          countLabel: 'tarjeta',
+        <%- include('_chart-hbar', {
+          datos: vistaCompromisos.porTarjeta,
           ariaLabel: 'Compromisos por tarjeta',
           emptyHint: 'Sin compromisos este mes.',
         }) %>

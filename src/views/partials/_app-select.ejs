@@ -14,6 +14,7 @@
 %>
 <div
   class="app-select<%= isCompact ? ' is-compact' : '' %>"
+  :class="{ 'is-open': open }"
   x-data="{ open: false<%= isBound ? '' : ', val: ' + JSON.stringify(current) %> }"
   <% if (!isBound) { %>
   x-init="(() => { const form = $el.closest('form'); if (!form) return; form.addEventListener('reset', () => { open = false; queueMicrotask(() => { val = <%= JSON.stringify(current) %>; }); }); })()"

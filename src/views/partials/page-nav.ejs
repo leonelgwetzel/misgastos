@@ -2,26 +2,30 @@
   var path = typeof currentPath !== 'undefined' ? currentPath : '/';
   var isGastos = path.startsWith('/gastos') && !path.startsWith('/gastos-fijos');
   var isIngresos = path.startsWith('/ingresos') && !path.startsWith('/ingresos-fijos');
-  var isMov = path.startsWith('/movimientos') || isGastos || isIngresos;
+  var isGastosFijos = path.startsWith('/gastos-fijos');
+  var isIngresosFijos = path.startsWith('/ingresos-fijos');
+  var isMov = path.startsWith('/movimientos') || isGastos || isIngresos || isGastosFijos || isIngresosFijos;
   var isConfigHome = path.startsWith('/configuracion');
   var isCuentas = path.startsWith('/cuentas');
   var isTarjetas = path.startsWith('/tarjetas');
   var isDivisas = path.startsWith('/divisas');
-  var isGastosFijos = path.startsWith('/gastos-fijos');
-  var isIngresosFijos = path.startsWith('/ingresos-fijos');
   var isCategorias = path.startsWith('/categorias');
   var isUsuarios = path.startsWith('/usuarios');
   var showUsuarios = typeof isAdmin !== 'undefined' && isAdmin;
-  var isConfig = isConfigHome || isCuentas || isTarjetas || isDivisas || isGastosFijos || isIngresosFijos || isCategorias || (showUsuarios && isUsuarios);
+  var isConfig = isConfigHome || isCuentas || isTarjetas || isDivisas || isCategorias || (showUsuarios && isUsuarios);
 %>
 <% if (isMov) { %>
   <nav class="month-secnav month-secnav-mobile" aria-label="Secciones de movimientos">
-    <a href="/gastos" class="month-secnav-link<%= isGastos ? ' is-active' : '' %>"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Gastos</span></a>
-    <a href="/ingresos" class="month-secnav-link<%= isIngresos ? ' is-active' : '' %>"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Ingresos</span></a>
+    <a href="/gastos" class="month-secnav-link<%= isGastos ? ' is-active' : '' %>"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Gastos</span></a>
+    <a href="/ingresos" class="month-secnav-link<%= isIngresos ? ' is-active' : '' %>"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Ingresos</span></a>
+    <a href="/gastos-fijos" class="month-secnav-link<%= isGastosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-repeat" aria-hidden="true"></i><span>Gastos fijos</span></a>
+    <a href="/ingresos-fijos" class="month-secnav-link<%= isIngresosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i><span>Ingresos fijos</span></a>
   </nav>
   <nav class="month-sidenav" aria-label="Secciones de movimientos">
-    <a href="/gastos" class="month-sidenav-link<%= isGastos ? ' is-active' : '' %>"><i class="fa-solid fa-arrow-trend-down" aria-hidden="true"></i><span>Gastos</span></a>
-    <a href="/ingresos" class="month-sidenav-link<%= isIngresos ? ' is-active' : '' %>"><i class="fa-solid fa-arrow-trend-up" aria-hidden="true"></i><span>Ingresos</span></a>
+    <a href="/gastos" class="month-sidenav-link<%= isGastos ? ' is-active' : '' %>"><i class="fa-solid fa-receipt" aria-hidden="true"></i><span>Gastos</span></a>
+    <a href="/ingresos" class="month-sidenav-link<%= isIngresos ? ' is-active' : '' %>"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Ingresos</span></a>
+    <a href="/gastos-fijos" class="month-sidenav-link<%= isGastosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-repeat" aria-hidden="true"></i><span>Gastos fijos</span></a>
+    <a href="/ingresos-fijos" class="month-sidenav-link<%= isIngresosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-hand-holding-dollar" aria-hidden="true"></i><span>Ingresos fijos</span></a>
   </nav>
 <% } else if (isConfig) { %>
   <nav class="month-secnav month-secnav-mobile" aria-label="Secciones de configuración">
@@ -29,11 +33,12 @@
     <a href="/cuentas" class="month-secnav-link<%= isCuentas ? ' is-active' : '' %>"><i class="fa-solid fa-building-columns" aria-hidden="true"></i><span>Cuentas</span></a>
     <a href="/tarjetas" class="month-secnav-link<%= isTarjetas ? ' is-active' : '' %>"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Tarjetas</span></a>
     <a href="/divisas" class="month-secnav-link<%= isDivisas ? ' is-active' : '' %>"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>Divisas</span></a>
-    <a href="/gastos-fijos" class="month-secnav-link<%= isGastosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-rotate" aria-hidden="true"></i><span>Gastos fijos</span></a>
-    <a href="/ingresos-fijos" class="month-secnav-link<%= isIngresosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Ingresos fijos</span></a>
     <a href="/categorias" class="month-secnav-link<%= isCategorias ? ' is-active' : '' %>"><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Categorías</span></a>
     <% if (showUsuarios) { %>
       <a href="/usuarios" class="month-secnav-link<%= isUsuarios ? ' is-active' : '' %>"><i class="fa-solid fa-users" aria-hidden="true"></i><span>Usuarios</span></a>
+    <% } %>
+    <% if (typeof telegramBotUrl !== 'undefined' && telegramBotUrl) { %>
+      <a href="<%= telegramBotUrl %>" class="month-secnav-link" target="_blank" rel="noopener noreferrer" aria-label="Hablar con el bot"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Hablar al bot</span></a>
     <% } %>
     <form action="/auth/logout" method="post" class="month-secnav-logout">
       <button type="submit" class="month-secnav-link"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i><span>Salir</span></button>
@@ -44,11 +49,12 @@
     <a href="/cuentas" class="month-sidenav-link<%= isCuentas ? ' is-active' : '' %>"><i class="fa-solid fa-building-columns" aria-hidden="true"></i><span>Cuentas</span></a>
     <a href="/tarjetas" class="month-sidenav-link<%= isTarjetas ? ' is-active' : '' %>"><i class="fa-solid fa-credit-card" aria-hidden="true"></i><span>Tarjetas</span></a>
     <a href="/divisas" class="month-sidenav-link<%= isDivisas ? ' is-active' : '' %>"><i class="fa-solid fa-coins" aria-hidden="true"></i><span>Divisas</span></a>
-    <a href="/gastos-fijos" class="month-sidenav-link<%= isGastosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-rotate" aria-hidden="true"></i><span>Gastos fijos</span></a>
-    <a href="/ingresos-fijos" class="month-sidenav-link<%= isIngresosFijos ? ' is-active' : '' %>"><i class="fa-solid fa-sack-dollar" aria-hidden="true"></i><span>Ingresos fijos</span></a>
     <a href="/categorias" class="month-sidenav-link<%= isCategorias ? ' is-active' : '' %>"><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Categorías</span></a>
     <% if (showUsuarios) { %>
       <a href="/usuarios" class="month-sidenav-link<%= isUsuarios ? ' is-active' : '' %>"><i class="fa-solid fa-users" aria-hidden="true"></i><span>Usuarios</span></a>
+    <% } %>
+    <% if (typeof telegramBotUrl !== 'undefined' && telegramBotUrl) { %>
+      <a href="<%= telegramBotUrl %>" class="month-sidenav-link" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i><span>Hablar al bot</span></a>
     <% } %>
   </nav>
 <% } %>

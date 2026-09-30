@@ -37,6 +37,20 @@ function registrar(bot) {
   bot.command('start', async (ctx) => {
     if (ctx.chat?.type !== 'private') return;
 
+    const payload = (ctx.match || '').trim();
+    if (payload) {
+      try {
+        const vinculo = await telegramService.vincular(payload, ctx.chat.id, nombreDelChat(ctx));
+        await ctx.reply(
+          `✅ Listo, quedaste conectado como <b>${vinculo.usuario.nombre}</b>.\n\n${AYUDA}`,
+          { parse_mode: 'HTML' },
+        );
+      } catch (err) {
+        await ctx.reply(`⚠️ ${err.message}`);
+      }
+      return;
+    }
+
     const usuario = await telegramService.resolverUsuario(ctx.chat.id);
     if (!usuario) {
       await ctx.reply(`${BIENVENIDA}\n\n${AVISO_SIN_VINCULO}`, { parse_mode: 'HTML' });

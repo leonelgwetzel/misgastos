@@ -1,0 +1,21 @@
+<%
+  const items = (typeof datos !== 'undefined' && datos) ? datos : [];
+  const maxG = items.length
+    ? Math.max.apply(null, items.map(function(t) { return Number(t.total) || 0; }).concat([1]))
+    : 1;
+%>
+<% if (items.length > 0) { %>
+  <div class="hbar-list" role="img" aria-label="<%= typeof ariaLabel !== 'undefined' ? ariaLabel : 'Compromisos por tarjeta' %>">
+    <% items.forEach(function(t) {
+      const pct = Math.max(8, Math.round(((Number(t.total) || 0) / maxG) * 1000) / 10);
+    %>
+      <div class="hbar-row">
+        <span class="hbar-fill" style="width: <%= pct %>%; --bar: <%= t.color || 'var(--accent)' %>;"></span>
+        <span class="hbar-name"><%= t.alias %></span>
+        <span class="hbar-amt"><%= t.totalFormateado %></span>
+      </div>
+    <% }); %>
+  </div>
+<% } else { %>
+  <p class="hint"><%= typeof emptyHint !== 'undefined' ? emptyHint : 'Sin compromisos este mes.' %></p>
+<% } %>

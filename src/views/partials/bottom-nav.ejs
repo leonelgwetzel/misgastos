@@ -1,8 +1,8 @@
 <%
   var path = typeof currentPath !== 'undefined' ? currentPath : '/';
   var isInicio = path === '/';
-  var isMov = path.startsWith('/movimientos') || (path.startsWith('/ingresos') && !path.startsWith('/ingresos-fijos')) || (path.startsWith('/gastos') && !path.startsWith('/gastos-fijos'));
-  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/gastos-fijos') || path.startsWith('/ingresos-fijos') || path.startsWith('/categorias');
+  var isMov = path.startsWith('/movimientos') || path.startsWith('/ingresos') || path.startsWith('/gastos');
+  var isConfig = path.startsWith('/configuracion') || path.startsWith('/cuentas') || path.startsWith('/tarjetas') || path.startsWith('/divisas') || path.startsWith('/categorias');
 %>
 <nav class="bottom-nav" aria-label="Navegación móvil">
   <a href="/" class="<%= isInicio ? 'nav-active' : '' %>">

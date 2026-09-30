@@ -1,4 +1,5 @@
 const dashboardService = require('../services/dashboard.service');
+const yearCalendarService = require('../services/yearCalendar.service');
 const gastoFijoService = require('../services/gastoFijo.service');
 const ingresoFijoService = require('../services/ingresoFijo.service');
 const { parseMonthParams, monthNavUrls } = require('../lib/dates');
@@ -12,13 +13,15 @@ async function index(req, res) {
 
   const vistaPlata = await dashboardService.getVistaPlataConContexto(req.session.userId, key);
   const vistaCompromisos = await dashboardService.getVistaCompromisos(req.session.userId, key);
+  const calendario = await yearCalendarService.getYearCalendar(req.session.userId, year);
 
   const payload = {
-    title: 'Inicio',
+    title: 'Dashboard',
     month: { year, month, label, key },
     nav,
     vistaPlata,
     vistaCompromisos,
+    calendario,
     hideCanvasTop: true,
     isHtmx: req.get('HX-Request') === 'true',
   };

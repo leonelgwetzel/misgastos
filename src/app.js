@@ -3,6 +3,7 @@ const expressLayouts = require('express-ejs-layouts');
 const path = require('path');
 const { createSessionMiddleware } = require('./middleware/session');
 const { attachUser } = require('./middleware/auth');
+const telegramService = require('./services/telegram.service');
 const authRoutes = require('./routes/auth.routes');
 const indexRoutes = require('./routes/index.routes');
 const tarjetaRoutes = require('./routes/tarjeta.routes');
@@ -31,8 +32,15 @@ function createApp() {
   app.use(express.json());
   app.use(createSessionMiddleware());
   app.use(attachUser);
-  app.use((req, res, next) => {
+  app.use(async (req, res, next) => {
     res.locals.currentPath = req.path;
+    res.locals.telegramBotUrl = null;
+    try {
+      const username = await telegramService.getBotUsername();
+      res.locals.telegramBotUrl = telegramService.urlDelBot(username);
+    } catch (err) {
+      console.error('[telegram] no pude armar el enlace del bot');
+    }
     next();
   });
 
